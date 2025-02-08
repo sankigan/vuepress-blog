@@ -4,16 +4,16 @@ import { viteBundler } from '@vuepress/bundler-vite'
 // import { webpackBundler } from '@vuepress/bundler-webpack'
 
 export default defineUserConfig({
-  title: "FE-Summary",
-  description: "等苦尽甘来那一天山河星月都做谢礼",
+  title: "SANKIHERE",
+  description: "",
   bundler: viteBundler(),
   // bundler: webpackBundler(),
   theme: recoTheme({
-    logo: "/logo.jpg",
-    author: "sanki's blog.",
+    logo: "/logo.png",
+    author: "sanki",
     authorAvatar: "/avatar.jpg",
     repo: "https://github.com/sankigan",
-    docsBranch: "master",
+    docsBranch: "main",
     docsDir: "example",
     lastUpdatedText: "",
     head: [
@@ -34,15 +34,15 @@ export default defineUserConfig({
     // },
     navbar: [
       { text: "Home", link: "/" },
-      { text: "Categories", link: "/categories/reco/1.html" },
-      { text: "Tags", link: "/tags/tag1/1.html" },
-      {
-        text: "Docs",
-        children: [
-          { text: "vuepress-reco", link: "/docs/theme-reco/theme" },
-          { text: "vuepress-theme-reco", link: "/blogs/other/guide" },
-        ],
-      },
+      { text: "Categories", link: "/" },
+      { text: "Tags", link: "/" },
+      // {
+      //   text: "Docs",
+      //   children: [
+      //     { text: "vuepress-reco", link: "/docs/theme-reco/theme" },
+      //     { text: "vuepress-theme-reco", link: "/blogs/other/guide" },
+      //   ],
+      // },
     ],
     // bulletin: {
     //   body: [

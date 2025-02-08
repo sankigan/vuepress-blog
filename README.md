@@ -9,12 +9,12 @@ bannerBrand:
   bgImage: '/bg.svg'
   title: FE Summary
   description: 等苦尽甘来那一天山河星月都做谢礼
-  # tagline: 等苦尽甘来那一天山河星月都做谢礼
-#   buttons:
-#     - { text: Guide, link: '/docs/guide/introduce' }
-#     - { text: Default Style, link: '/docs/style-default-api/introduce', type: 'plain' }
+  tagline: 等苦尽甘来那一天山河星月都做谢礼
+  buttons:
+    - { text: Github, link: 'https://github.com/sankigan?tab=repositories' }
+    - { text: Github, link: 'https://github.com/sankigan?tab=repositories', type: 'plain' }
 #   socialLinks:
-#     - { icon: 'LogoGithub', link: 'https://github.com/vuepress-reco/vuepress-theme-reco' }
+#     - { icon: 'LogoGithub', link: 'https://github.com/sankigan?tab=repositories' }
 # blog:
 #   socialLinks:
 #     - { icon: 'LogoGithub', link: 'https://github.com/recoluan' }
