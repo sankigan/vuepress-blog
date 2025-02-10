@@ -1,98 +1,101 @@
-import { defineUserConfig } from "vuepress";
-import recoTheme from "vuepress-theme-reco";
-import { viteBundler } from '@vuepress/bundler-vite'
-// import { webpackBundler } from '@vuepress/bundler-webpack'
+import { resolve } from 'path';
+import recoTheme from 'vuepress-theme-reco';
+import { defineUserConfig } from 'vuepress';
+import { viteBundler } from '@vuepress/bundler-vite';
+import { webpackBundler } from '@vuepress/bundler-webpack';
 
 export default defineUserConfig({
-  title: "SANKIHERE",
-  description: "",
+  lang: 'zh-CN',
+  title: 'SANKIHERE',
+  description: '',
   bundler: viteBundler(),
   // bundler: webpackBundler(),
+  alias: {
+    '@vicons/carbon': resolve(__dirname, 'icons'),
+  },
   theme: recoTheme({
-    logo: "/logo.png",
-    author: "sanki",
-    authorAvatar: "/avatar.jpg",
-    repo: "https://github.com/sankigan",
-    docsBranch: "main",
-    docsDir: "example",
-    lastUpdatedText: "",
-    head: [
-      ['link', { rel: 'icon', href: 'favicon.ico' }]
-    ],
-    // series 为原 sidebar
-    // series: {
-    //   "/docs/theme-reco/": [
-    //     {
-    //       text: "module one",
-    //       children: ["home", "theme"],
-    //     },
-    //     {
-    //       text: "module two",
-    //       children: ["api", "plugin"],
-    //     },
-    //   ],
-    // },
+    logo: '/logo.png',
+    docsDir: './docs',
+    docsBranch: 'main',
+    author: 'sankigan',
+    lastUpdatedText: '更新于',
+    editLinkText: '编辑此页面',
+    authorAvatar: '/avatar.jpg',
+    repo: 'https://github.com/sankigan',
+    docsRepo: 'https://github.com/sankigan/vuepress-blog',
+    // head: [
+    //   ['link', { rel: 'icon', href: 'favicon.ico' }]
+    // ],
     navbar: [
-      { text: "Home", link: "/" },
-      { text: "Categories", link: "/" },
-      { text: "Tags", link: "/" },
-      // {
-      //   text: "Docs",
-      //   children: [
-      //     { text: "vuepress-reco", link: "/docs/theme-reco/theme" },
-      //     { text: "vuepress-theme-reco", link: "/blogs/other/guide" },
-      //   ],
-      // },
+      { text: '首页', link: '/', icon: 'Home' },
+      { text: '文章', link: '/posts.html' },
+      {
+        text: '分类',
+        icon: 'Categories',
+        children: [
+          { text: '前端', link: '/categories/qianduan/1.html' },
+          { text: '计算机基础', link: '' }
+        ],
+      },
+      { text: '标签', link: '/tags/JavaScript/1', icon: 'Tag' },
+      { text: '归档', link: '/timeline.html', icon: 'Calendar', },
+      // { text: '项目', link: '/code', icon: 'Code' },
+      {
+        text: '文档',
+        children: [
+          { text: 'vuepress-reco', link: 'https://theme-reco.vuejs.press/' },
+        ],
+      },
     ],
     // bulletin: {
     //   body: [
     //     {
-    //       type: "text",
+    //       type: 'text',
     //       content: `🎉🎉🎉 reco 主题 2.x 已经接近 Beta 版本，在发布 Latest 版本之前不会再有大的更新，大家可以尽情尝鲜了，并且希望大家在 QQ 群和 GitHub 踊跃反馈使用体验，我会在第一时间响应。`,
-    //       style: "font-size: 12px;",
+    //       style: 'font-size: 12px;',
     //     },
     //     {
-    //       type: "hr",
+    //       type: 'hr',
     //     },
     //     {
-    //       type: "title",
-    //       content: "QQ 群",
+    //       type: 'title',
+    //       content: 'QQ 群',
     //     },
     //     {
-    //       type: "text",
+    //       type: 'text',
     //       content: `
     //       <ul>
     //         <li>QQ群1：1037296104</li>
     //         <li>QQ群2：1061561395</li>
     //         <li>QQ群3：962687802</li>
     //       </ul>`,
-    //       style: "font-size: 12px;",
+    //       style: 'font-size: 12px;',
     //     },
     //     {
-    //       type: "hr",
+    //       type: 'hr',
     //     },
     //     {
-    //       type: "title",
-    //       content: "GitHub",
+    //       type: 'title',
+    //       content: 'GitHub',
     //     },
     //     {
-    //       type: "text",
+    //       type: 'text',
     //       content: `
     //       <ul>
-    //         <li><a href="https://github.com/vuepress-reco/vuepress-theme-reco-next/issues">Issues<a/></li>
-    //         <li><a href="https://github.com/vuepress-reco/vuepress-theme-reco-next/discussions/1">Discussions<a/></li>
+    //         <li><a href='https://github.com/vuepress-reco/vuepress-theme-reco-next/issues'>Issues<a/></li>
+    //         <li><a href='https://github.com/vuepress-reco/vuepress-theme-reco-next/discussions/1'>Discussions<a/></li>
     //       </ul>`,
-    //       style: "font-size: 12px;",
+    //       style: 'font-size: 12px;',
     //     },
     //     {
-    //       type: "hr",
+    //       type: 'hr',
     //     },
     //     {
-    //       type: "buttongroup",
+    //       type: 'buttongroup',
     //       children: [
     //         {
-    //           text: "打赏",
-    //           link: "/docs/others/donate.html",
+    //           text: '打赏',
+    //           link: '/docs/others/donate.html',
     //         },
     //       ],
     //     },
