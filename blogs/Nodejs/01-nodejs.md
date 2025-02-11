@@ -20,7 +20,7 @@ categories:
 
 当 Node 遇到 `require(X)` 时，按下面的顺序处理：（优先从缓存中加载，然后遵循以下加载顺序）
 
-1. 如果 X 是内置模块（比如 `require('http')` )
+1. 如果 X 是内置模块（比如 `require('http')` ）
 
    a. 返回该模块
 
@@ -487,11 +487,11 @@ path.relative('/data/orandea/test/aaa', '/data/orandea/impl/bbb');
 
 返回的对象将具有以下属性：
 
-- `dir` <string>
-- `root` <string>
-- `base` <string>
-- `name` <string>
-- `ext` <string>
+- `dir`
+- `root`
+- `base`
+- `name`
+- `ext`
 
 ```javascript
 path.parse('/home/user/dir/file.txt');

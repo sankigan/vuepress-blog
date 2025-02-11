@@ -3,9 +3,9 @@ title: 观察者模式
 date: 2019-4-18
 editLink: false
 tags:
- - 设计模式
-categories:
  - 设计模式基础
+categories:
+ - 设计模式
 ---
 
 # 观察者模式

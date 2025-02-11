@@ -8,9 +8,9 @@ modules:
   - Footer
 bannerBrand:
   bgImage: /bg.svg
-  title: FE Summary
-  description: 等苦尽甘来那一天山河星月都做谢礼
-  # tagline: 等苦尽甘来那一天山河星月都做谢礼
+  title: Sanki's Blog
+  description: 学习、记录、分享
+  tagline: 等苦尽甘来那一天山河星月都做谢礼。
   buttons:
     - text: 开始阅读
       link: /posts.html

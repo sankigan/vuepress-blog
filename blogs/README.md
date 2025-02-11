@@ -1,9 +1,8 @@
 ---
 title: 汇总
-date: 2021-4-24
+date: 2025-2-11
 editLink: false
-categories:
- - 前端
+sticky: 1
 ---
 
 # Front-End Summary
@@ -32,15 +31,13 @@ categories:
 
 [JavaScript(卷二)](/blogs/javascript/02-javascript.md)
 
-[DOM](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/JavaScript/DOM.md)
+[DOM](/blogs/javascript/dom.md)
 
 [BOM](/blogs/javascript/bom.md)
 
 [HTML](/blogs/html.md)
 
 [CSS](/blogs/css/01-css.md)
-
-[Vue](https://sanqig.github.io/2019/05/29/Vue%E5%85%A5%E9%97%A8/#more)
 
 [React](/blogs/react/01-react.md)
 

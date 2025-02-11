@@ -3,9 +3,9 @@ title: 装饰者模式
 date: 2019-4-12
 editLink: false
 tags:
- - 设计模式
-categories:
  - 设计模式基础
+categories:
+ - 设计模式
 ---
 
 # 装饰者模式

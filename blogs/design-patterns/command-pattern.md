@@ -3,9 +3,9 @@ title: 命令模式
 date: 2019-4-17
 editLink: false
 tags:
- - 设计模式
-categories:
  - 设计模式基础
+categories:
+ - 设计模式
 ---
 
 # 命令模式

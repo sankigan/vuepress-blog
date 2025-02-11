@@ -3,9 +3,9 @@ title: 单例模式
 date: 2019-4-10
 editLink: false
 tags:
- - 设计模式
-categories:
  - 设计模式基础
+categories:
+ - 设计模式
 ---
 
 # 单例模式

@@ -3,9 +3,9 @@ title: 策略模式
 date: 2019-4-16
 editLink: false
 tags:
- - 设计模式
-categories:
  - 设计模式基础
+categories:
+ - 设计模式
 ---
 
 # 策略模式

@@ -3,9 +3,9 @@ title: 建造者模式
 date: 2019-4-11
 editLink: false
 tags:
- - 设计模式
-categories:
  - 设计模式基础
+categories:
+ - 设计模式
 ---
 
 # 建造者模式

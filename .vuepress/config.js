@@ -6,7 +6,7 @@ import { webpackBundler } from '@vuepress/bundler-webpack';
 
 export default defineUserConfig({
   lang: 'zh-CN',
-  title: 'SANKIHERE',
+  title: 'Sanki\'s Blog',
   description: '',
   bundler: viteBundler(),
   // bundler: webpackBundler(),
@@ -36,7 +36,7 @@ export default defineUserConfig({
           { text: '前端', link: '/categories/qianduan/1.html' },
           { text: '后端', link: '/categories/houduan/1.html' },
           { text: '算法', link: '/categories/suanfa/1.html' },
-          { text: '设计模式基础', link: '/categories/shejimoshijichu/1.html' }
+          { text: '设计模式', link: '/categories/shejimoshi/1.html' },
         ],
       },
       { text: '标签', link: '/tags/JavaScript/1', icon: 'Tag' },
