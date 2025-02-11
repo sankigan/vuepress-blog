@@ -1,18 +1,18 @@
 ## 1、BFC
 
-详见[文章](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/CSS/BFC.md)
+详见[文章](/blogs/css/bfc.md)
 
 ## 2、三栏布局
 
-详见[文章](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/CSS/%E4%B8%89%E6%A0%8F%E5%B8%83%E5%B1%80.md)
+详见[文章](/blogs/css/three-column-layout.md)
 
 ## 3、水平居中
 
-详见[文章](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/CSS/%E6%B0%B4%E5%B9%B3%E5%B1%85%E4%B8%AD.md)
+详见[文章](/blogs/css/horizontal-centering.md)
 
 ## 4、垂直居中
 
-详见[文章](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/CSS/%E5%9E%82%E7%9B%B4%E5%B1%85%E4%B8%AD.md)
+详见[文章](/blogs/css/vertical-centering.md)
 
 ## 5、盒模型
 
@@ -34,7 +34,7 @@
 
 ## 6、Flex
 
-详见[文章](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/CSS/Flex.md)
+详见[文章](/blogs/css/flex.md)
 
 ## 7、CSS 选择器权重
 

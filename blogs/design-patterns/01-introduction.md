@@ -2,26 +2,24 @@
 
 > 以后还要专门阅读相关书籍继续深入学习!ヾ(◍°∇°◍)ﾉﾞ
 
-*此情可待成追忆，只是当时已惘然*
+*[单例模式](/blogs/design-patterns/singleton-pattern.md)*
 
-*[单例模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F.md)*
+*[构造函数模式](/blogs/design-patterns/constructor-pattern.md)*
 
-*[构造函数模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E6%A8%A1%E5%BC%8F.md)*
+*[建造者模式](/blogs/design-patterns/builder-pattern.md)*
 
-*[建造者模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F.md)*
+*[工厂模式](/blogs/design-patterns/factory-pattern.md)*
 
-*[工厂模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F.md)*
+*[装饰者模式](/blogs/design-patterns/decorator-pattern.md)*
 
-*[装饰者模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%A3%85%E9%A5%B0%E8%80%85%E6%A8%A1%E5%BC%8F.md)*
+*[外观模式](/blogs/design-patterns/facade-pattern.md)*
 
-*[外观模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E5%A4%96%E8%A7%82%E6%A8%A1%E5%BC%8F.md)*
+*[代理模式](/blogs/design-patterns/proxy-pattern.md)*
 
-*[代理模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F.md)*
+*[观察者模式](/blogs/design-patterns/observer-pattern.md)*
 
-*[观察者模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F.md)*
+*[策略模式](/blogs/design-patterns/strategy-pattern.md)*
 
-*[策略模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F.md)*
+*[命令模式](/blogs/design-patterns/command-pattern.md)*
 
-*[命令模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E5%91%BD%E4%BB%A4%E6%A8%A1%E5%BC%8F.md)*
-
-*[迭代器模式](https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%BF%AD%E4%BB%A3%E5%99%A8%E6%A8%A1%E5%BC%8F.md)*
+*[迭代器模式](/blogs/design-patterns/iterator-pattern.md)*

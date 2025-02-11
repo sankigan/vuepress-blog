@@ -11,7 +11,7 @@ Redux是一个数据层框架，主要解决了组件间状态共享的问题，
 5. store接收并更新state
 6. 使用store.subscribe订阅更新，重新render组件
 
-![Redux Flow](<https://github.com/sankigan/Front-End-Summary/blob/master/image/redux.png>)
+![Redux Flow](https://github.com/sankigan/Front-End-Summary/blob/master/github%3Aimages/redux.png)
 
 ## Reducer为什么是纯函数
 

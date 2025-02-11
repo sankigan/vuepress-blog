@@ -10,7 +10,7 @@
 
 ## 正文
 
-下面这个例子，是应用了工厂方法对[构造函数模式](<https://github.com/sankigan/Front-End-Summary/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E6%A8%A1%E5%BC%8F.md>)代码的改进版本：
+下面这个例子，是应用了工厂方法对[构造函数模式](/blogs/design-patterns/constructor-pattern.md)代码的改进版本：
 
 ```javascript
 var Car = (function() {

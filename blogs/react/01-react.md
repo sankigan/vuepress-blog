@@ -1,6 +1,6 @@
-## [VDOM](<https://github.com/sankigan/Front-End-Summary/blob/master/React/VDOM.md>)
+## [VDOM](/blogs/react/v-dom.md)
 
-## [Redux](<https://github.com/sankigan/Front-End-Summary/blob/master/React/Redux.md>)
+## [Redux](/blogs/react/redux.md)
 
 ## Vue 和 React 的区别
 
