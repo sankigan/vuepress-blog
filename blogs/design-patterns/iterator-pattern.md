@@ -1,3 +1,13 @@
+---
+title: 迭代器模式
+date: 2019-4-18
+editLink: false
+tags:
+ - 设计模式
+categories:
+ - 设计模式基础
+---
+
 # 迭代器模式
 
 ## 介绍
@@ -21,7 +31,7 @@ var agg = (function() {
     var index = 0,
     	data = [1, 2, 3, 4, 5],
     	length = data.length;
-    
+
     return {
         next: function() {
             var element;
@@ -32,15 +42,15 @@ var agg = (function() {
             index += 2;
             return element;
         },
-        
+
         hasNext: function() {
             return index < length;
         },
-        
+
         rewind: function() {
             index = 0;
         },
-        
+
         current: function() {
             return data[index];
         }

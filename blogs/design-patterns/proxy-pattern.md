@@ -1,3 +1,13 @@
+---
+title: 代理模式
+date: 2019-4-15
+editLink: false
+tags:
+ - 设计模式
+categories:
+ - 设计模式基础
+---
+
 # 代理模式
 
 ## 介绍
@@ -80,13 +90,13 @@ var http = {
             format = 'format=json',
             handler = 'callback=' + callback,
             script = document.createElement('script');
-        
+
         sql = sql.replace('%ID%', ids.join('","'));
         sql = encodeURIComponent(sql);
-        
+
         url += sql + '&' + format + '&' + handler;
         script.src = url;
-        
+
         document.body.appendChild(script);
     }
 };
@@ -106,7 +116,7 @@ var proxy = {
         this.ids.push(id);
         this.callback = callback;
         this.context = context;
-        
+
         if (!this.timeout) {
             this.timeout = setTimeout(function() {
                 proxy.flush();
@@ -118,20 +128,20 @@ var proxy = {
         // proxy.handler为请求yahoo时的callback
         http.makeRequest(this.ids, 'proxy.handler');
         // 请求数据以后，紧接着执行proxy.handler方法（里面有另一个设置的calback）
-        
+
         // 清除timeout队列
         this.timeout = null;
         this.ids = [];
     },
     handler: function(data) {
         var i, max;
-        
+
         // 单个视频的callback调用
         if (parseInt(data.query.count, 10) === 1) {
             proxy.callback.call(proxy.context, data.query.results.Video);
             return;
         }
-        
+
         // 多个视频的callback调用
         for (i = 0, max = data.query.results.Video.length; i < max; i += 1) {
             proxy.callback.call(proxy.context, data.query.results.Video[i]);
@@ -229,7 +239,7 @@ document.getElementById('vids').onclick = function (e) {
         src.parentNode.innerHTML = videos.getPlayer(id);
         return;
     }
-        
+
     src.parentNode.id = "v" + id;
     videos.getInfo(id); // 这个才是第一次点击的时候显示视频信息的处理代码
 };

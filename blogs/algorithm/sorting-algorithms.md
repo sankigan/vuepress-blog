@@ -1,3 +1,13 @@
+---
+title: 经典排序算法比较
+date: 2019-4-11
+editLink: false
+tags:
+ - 排序算法
+categories:
+ - 算法
+---
+
 ## 经典排序算法比较
 
 ![](https://user-gold-cdn.xitu.io/2018/12/24/167de867a0b2c69e?imageslim)
@@ -221,7 +231,7 @@ function countSort(arr) {
 		while (tmp[index]-- > 0) res.push(+index);
 	}
 	return res;
-} 
+}
 
 ```
 

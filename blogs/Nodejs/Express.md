@@ -1,4 +1,12 @@
-[toc]
+---
+title: Express 入门
+date: 2021-4-20
+editLink: false
+tags:
+ - Express
+categories:
+ - 后端
+---
 
 # 1. 起步
 
@@ -46,7 +54,7 @@ app.use(express.static('public'))
 
 // 带上第一个参数之后，通过 url 访问静态资源需要以对应参数内容开头
 app.use('/public', express.static('public'))
- 
+
 app.use('/public', express.static(path.join(__dirname, 'public')))
 ```
 

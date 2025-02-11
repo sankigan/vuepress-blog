@@ -1,3 +1,13 @@
+---
+title: 缓存
+date: 2019-4-10
+editLink: false
+tags:
+ - 网络与浏览器
+categories:
+ - 前端
+---
+
 # 一、缓存
 
 > 参考了[这篇文章](<https://github.com/amandakelake/blog/issues/43>)

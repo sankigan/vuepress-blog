@@ -1,3 +1,13 @@
+---
+title: MongoDB 入门
+date: 2021-4-20
+editLink: false
+tags:
+ - MongoDB
+categories:
+ - 后端
+---
+
 # 1. 安装（macOS）
 
 MongoDB 下载地址：https://www.mongodb.com/download-center#community

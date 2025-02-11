@@ -1,3 +1,13 @@
+---
+title: Vuex 入门
+date: 2021-4-20
+editLink: false
+tags:
+ - Vue
+categories:
+ - 前端
+---
+
 # Vuex
 
 ## State

@@ -1,3 +1,13 @@
+---
+title: HTML5
+date: 2019-5-1
+editLink: false
+tags:
+ - HTML5
+categories:
+ - 前端
+---
+
 ## HTML5 为什么只需要写`<!DOCTYPE HTML>`
 
 [什么是DOCTYPE？](https://zhuanlan.zhihu.com/p/32609899)
@@ -93,7 +103,7 @@ Expires: 0
    input.value = "foo2";
    input.getAttribute("value");  // 返回string："foo"
    ```
-   
+
 ## meta标签的作用
 
 > 🔎[猛戳我](https://segmentfault.com/a/1190000004279791)

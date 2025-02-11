@@ -34,7 +34,9 @@ export default defineUserConfig({
         icon: 'Categories',
         children: [
           { text: '前端', link: '/categories/qianduan/1.html' },
-          { text: '计算机基础', link: '' }
+          { text: '后端', link: '/categories/houduan/1.html' },
+          { text: '算法', link: '/categories/suanfa/1.html' },
+          { text: '设计模式基础', link: '/categories/shejimoshijichu/1.html' }
         ],
       },
       { text: '标签', link: '/tags/JavaScript/1', icon: 'Tag' },

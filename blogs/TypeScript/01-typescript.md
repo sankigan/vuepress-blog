@@ -1,3 +1,13 @@
+---
+title: TypeScript 入门
+date: 2021-4-23
+editLink: false
+tags:
+ - TypeScript
+categories:
+ - 前端
+---
+
 # TypeScript
 
 ## TS 增加了什么？

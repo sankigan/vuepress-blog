@@ -1,3 +1,13 @@
+---
+title: Redux 入门
+date: 2021-4-20
+editLink: false
+tags:
+ - React
+categories:
+ - 前端
+---
+
 ## Redux简介
 
 Redux是一个数据层框架，主要解决了组件间状态共享的问题，原理是集中式管理，主要由三个核心方法，`action`，`store`和`reducer`。

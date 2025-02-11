@@ -1,3 +1,13 @@
+---
+title: Linux 命令行基础
+date: 2021-5-24
+editLink: false
+tags:
+ - 命令行
+categories:
+ - Linux
+---
+
 # Linux基础
 
 ## [TODO] 分区

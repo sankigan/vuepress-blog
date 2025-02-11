@@ -1,3 +1,13 @@
+---
+title: 从输入URL到页面加载完成过程分析
+date: 2019-3-25
+editLink: false
+tags:
+ - 网络与浏览器
+categories:
+ - 前端
+---
+
 整个过程从前端的角度来看大致如下：
 
 **`1. DNS解析`**

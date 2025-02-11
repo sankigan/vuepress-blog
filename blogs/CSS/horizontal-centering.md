@@ -1,3 +1,13 @@
+---
+title: 水平居中
+date: 2019-3-21
+editLink: false
+tags:
+ - CSS
+categories:
+ - 前端
+---
+
 ## 1、外边距
 
 ```html
@@ -9,7 +19,7 @@
     width: 100px;
     height: 100px;
     background: #FCC;
-    
+
     margin: 0 auto;
 }
 ```
@@ -30,7 +40,7 @@
     width: 100px;
     height: 100px;
     background: #FCC;
-    
+
     display: inline-block;
 }
 ```
@@ -46,7 +56,7 @@
     width: 100px;
     height: 100px;
     background: #FCC;
-    
+
     position: absolute;
     left: 50%;
     transform: translateX(-50%);

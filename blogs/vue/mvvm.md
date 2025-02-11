@@ -1,3 +1,13 @@
+---
+title: MVC、MVP 和 MVVM
+date: 2021-4-20
+editLink: false
+tags:
+ - Vue
+categories:
+ - 前端
+---
+
 ## MVC
 
 ![MVC](http://www.ruanyifeng.com/blogimg/asset/2015/bg2015020105.png)
@@ -46,7 +56,7 @@ ViewModel通过**双向数据绑定**把View层和Model层连接了起来，而V
 
 ## MVVM和MVC的区别？
 
-MVC也是一种设计思想，主要就是MVC中的Controlled演变成MVVM中的ViewModel。MVVM主要解决了MVC中大量的DOM操作使页面渲染性能降低，加载速度变慢，影响用户体验。和当Model频繁发送变化，开发者需要主动更新到View。 
+MVC也是一种设计思想，主要就是MVC中的Controlled演变成MVVM中的ViewModel。MVVM主要解决了MVC中大量的DOM操作使页面渲染性能降低，加载速度变慢，影响用户体验。和当Model频繁发送变化，开发者需要主动更新到View。
 
 ## 数据的双向绑定
 

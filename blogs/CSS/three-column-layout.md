@@ -1,3 +1,13 @@
+---
+title: 三栏布局
+date: 2019-3-21
+editLink: false
+tags:
+ - CSS
+categories:
+ - 前端
+---
+
 # 三栏布局（7种方式实现）
 
 ## 1、浮动布局

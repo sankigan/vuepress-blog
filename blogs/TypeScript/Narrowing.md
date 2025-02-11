@@ -1,3 +1,13 @@
+---
+title: TypeScript 类型收窄
+date: 2021-4-23
+editLink: false
+tags:
+ - TypeScript
+categories:
+ - 前端
+---
+
 # TypeScript の Narrowing
 
 TypeScript 的类型检查器会考虑到这些类型保护和赋值语句，而这个**将类型推导为更精确类型的过程，我们称之为收窄(narrowing)**。

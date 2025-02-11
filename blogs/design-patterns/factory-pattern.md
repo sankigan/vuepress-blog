@@ -1,3 +1,13 @@
+---
+title: 工厂模式
+date: 2019-4-11
+editLink: false
+tags:
+ - 设计模式
+categories:
+ - 设计模式基础
+---
+
 # 工厂模式
 
 ## 介绍

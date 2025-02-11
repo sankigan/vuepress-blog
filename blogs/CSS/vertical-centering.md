@@ -1,3 +1,13 @@
+---
+title: 垂直居中
+date: 2019-3-21
+editLink: false
+tags:
+ - CSS
+categories:
+ - 前端
+---
+
 ## 1、行高
 
 ```html
@@ -9,7 +19,7 @@
     width: 100px;
     height: 100px;
     background: #FEE;
-    
+
     line-height: 100px;
 }
 ```
@@ -24,7 +34,7 @@
 .box {
     width: 100px;
     background: #FEE;
-    
+
     padding: 50px 0;
 }
 ```
@@ -42,7 +52,7 @@
     width: 100px;
     height: 100px;
     background: #FEE;
-        
+
     display: table;
 }
 .box {
@@ -64,7 +74,7 @@
 	width: 100px;
     height: 100px;
     background: #FEE;
-    
+
     position: relative;
 }
 .box {
@@ -85,7 +95,7 @@
     width: 100px;
     height: 100px;
     background: #FEE;
-    
+
     display: flex;
     align-items: center;
 }

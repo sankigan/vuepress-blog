@@ -1,3 +1,13 @@
+---
+title: 装饰者模式
+date: 2019-4-12
+editLink: false
+tags:
+ - 设计模式
+categories:
+ - 设计模式基础
+---
+
 # 装饰者模式
 
 ## 介绍
@@ -61,11 +71,11 @@ function AbstractDecorator(decorated) {
 function ConcreteDecoratorClass(decorated) {
     this.base = AbstractDecorator;
     this.base(decorated);
-    
+
     decorated.preTask = function() {
 		console.log('pre-calling...');
     };
-    
+
     decorated.postTask = function() {
 		console.log('post-calling...');
     };

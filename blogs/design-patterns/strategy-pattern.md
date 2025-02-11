@@ -1,3 +1,13 @@
+---
+title: 策略模式
+date: 2019-4-16
+editLink: false
+tags:
+ - 设计模式
+categories:
+ - 设计模式基础
+---
+
 # 策略模式
 
 ## 介绍
@@ -33,38 +43,38 @@ console.log(validator.validate("123", "isNonEmpty"));
 var validator = {
     // 所有可以的验证规则处理类存放的地方，后面单独定义
     types: {},
-    
+
     // 验证类型所对应的错误消息
     messages: [],
-    
+
     config: {},
-    
+
     // 暴露公开的验证方法
     // 传入的参数是键值对
     validate: function(data) {
         var i, msg, type, checker, result_ok;
-        
+
         // 清空所有的错误信息
         this.messages = [];
-        
+
         for (i in data) {
             if (data.hasOwnProperty(i)) {
                 type = this.config[i];  // 根据key查询是否存在验证规则
                 checker = this.types[type];  // 获取验证规则的验证类
-                
+
                 if (!type) {  // 如果验证规则不存在则不处理
                     continue;
                 }
-                
+
                 if (!checker) {  // 如果验证规则类不存在，抛出异常
                     throw {
                         name: "ValidationError",
                         message: "No handler to validate type " + type
                     };
                 }
-                
+
                 result_ok = checker.validate(data[i]); // 使用查到的单个验证类进行验证
-                
+
                 if (!result_ok) {
                     msg = "Invalid value for *" + i + "*, " + checker.instructions;
                     this.messages.push(msg);
@@ -73,7 +83,7 @@ var validator = {
         }
         return this.hasErrors();
     },
-    
+
     // helper
     hasErrors: function() {
         return this.messages.length !== 0;

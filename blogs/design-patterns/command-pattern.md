@@ -1,3 +1,13 @@
+---
+title: 命令模式
+date: 2019-4-17
+editLink: false
+tags:
+ - 设计模式
+categories:
+ - 设计模式基础
+---
+
 # 命令模式
 
 ## 介绍
@@ -15,12 +25,12 @@
         requestInfo: function(model, id) {
             return `The information for ${model} with ID ${id} is foobar`;
         },
-        
+
         // 购买汽车
         buyVehicle: function(model, id) {
             return `You have successfully purchased Item ${id}, a ${model}`;
         },
-        
+
         // 组织view
         arrangeViewing: function(model, id) {
             return `You have successfully booked a viewing of ${model} (${id})`;

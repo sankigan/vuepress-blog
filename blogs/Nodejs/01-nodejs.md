@@ -1,4 +1,12 @@
-[toc]
+---
+title: NodeJS 入门
+date: 2021-4-20
+editLink: false
+tags:
+ - NodeJS
+categories:
+ - 后端
+---
 
 # 1. NodeJS 基础
 
@@ -15,13 +23,13 @@
 1. 如果 X 是内置模块（比如 `require('http')` )
 
    a. 返回该模块
-   
+
    b. 不再继续执行
 
 2. 如果 X 以 "./" 或者 "/" 或者 "../" 开头
 
    a. 根据 X 所在的父模块，确定 X 的绝对路径
-   
+
    b. 将 X 当成文件，依次查找下面文件，只要其中有一个存在，就返回该文件，不再继续执行
 
    - X
@@ -37,11 +45,11 @@
    - X/index.node
 
 3. 如果 X 不带路径
-  
+
    a. 根据 X 所在的父模块，确定 X 可能的安装目录
-   
+
    b. 依次在每个目录中，将 X 当成文件名或目录名加载
-   
+
 4. 抛出 “not found”
 
 **_`exports`_**
@@ -83,7 +91,7 @@ node main.js
 1. **内置模块**
 
    如果传递给 `require` 函数的是 NodeJS 内置模块名称，不做路径解析，直接返回内部模块的导出对象，例如 `require('fs')`。
-   
+
 2. **node_modules 目录**
 
 
@@ -126,7 +134,7 @@ JS 模块的基本单位是单个 JS 文件，但复杂些的模块往往由多�
    ```
 
    这样处理后，就只需要把包目录路径传递给 `require` 函数，感觉上整个目录被当作单个模块使用，更有整体感。
-   
+
 2. `package.json`
 
    如果想自定义入口模块的文件名和存放位置，就需要在包目录下包含一个 `package.json` 文件，并在其中指定入口模块路径。
@@ -153,7 +161,7 @@ JS 模块的基本单位是单个 JS 文件，但复杂些的模块往往由多�
    ```
 
    如此一来，就同样可以使用 `require('/home/user/lib/cat')` 的方式加载模块。NodeJS 会根据包目录下的 `package.json` 找到入口模块所在位置。
-   
+
 3. `package.json` 和 `package-lock.json`
 
    NPM5 以前是不会有 `package-lock.json` 文件的，NPM5 以后安装包的时候，会自动创建或者更新 `package-lock.json` 这个文件。
@@ -511,7 +519,7 @@ path.parse('/home/user/dir/file.txt');
 零长度的 `path` 片段会被忽略。如果连接的路径字符串是零长度的字符串，则返回 `'.'`，表示当前工作目录。
 
 ```javascript
-path.join('/foo', 'bar', 'baz/asdf', 'quux', '..'); 
+path.join('/foo', 'bar', 'baz/asdf', 'quux', '..');
 // 返回： 'foo/bar/baz/asdf'
 
 path.join('foo', {}, 'bar');
@@ -616,7 +624,7 @@ path.resolve(__dirname, '../regx/regx.js');
 function travel(dir, callback) {
   fs.readdirSync(dir).forEach(function(file) {
     var pathname = path.join(dir, file);
-    
+
     if (fs.statSync(pathname).isDirectory()) {
       travel(pathname, callback);
     } else {
@@ -661,7 +669,7 @@ function travel(dir, callback, finish) {
     (function next(i) {
       if (i < files.length) {
         var pathname = path.join(dir, files[i]);
-        
+
         fs.stat(pathname, function(err, stats) {
         	if (stats.isDirectory()) {
             travel(pathname, callback, function() {
@@ -702,11 +710,11 @@ BOM 用于标记一个文本文件使用 Unicode 编码，其本身是一个 Uni
 ```javascript
 function readText(pathname) {
   var bin = fs.readFileSync(pathname);
-  
+
   if (bin[0] === 0xEF && bin[1] === 0xBB && bin[2] === 0xBF) {
     bin = bin.slice(3);
   }
-  
+
   return bin.toString('utf-8');
 }
 ```
@@ -720,7 +728,7 @@ var iconv = require('iconv-lite');
 
 function readGBKText(pathname) {
   var bin = fs.readeFileSync(pathname);
-  
+
   return iconv.decode(bin, 'gbk');
 }
 ```
@@ -808,14 +816,14 @@ Hello World
 ```javascript
 http.createServer(function(request, response) {
   var body = [];
-  
+
   console.log(request.method);
   console.log(request.headers);
-  
+
   request.on('data', function (chunk) {
     body.push(chunk);
   });
-  
+
   request.on('end', function () {
     body = Buffer.concat(body);
     console.log(body.toString());
@@ -840,11 +848,11 @@ Hello World
 ```javascript
 http.createServer(function (request, response) {
   response.writeHead(200, { 'Content-Type': 'text/plain' });
-  
+
   request.on('data', function(chunk) {
     response.write(chunk);
   });
-  
+
   request.on('end', function() {
     response.end();
   });
@@ -881,14 +889,14 @@ http.get('http://www.example.com/', function (response) {});
 ```javascript
 http.get('http://www.example.com/', function(response) {
   var body = [];
-  
+
   console.log(response.statusCode);
   console.log(response.headers);
-  
+
   response.on('data', function (chunk) {
     body.push(chunk);
   });
-  
+
   response.on('end', function() {
     body = Buffer.concat(body);
     console.log(body.toString());
@@ -1018,7 +1026,7 @@ url.format({
   pathname: '/p/a/t/h',
   search: 'query=string'
 });
-/* => 
+/* =>
 	'http://www.example.com/p/a/t/h?query=string'
 */
 ```
@@ -1058,30 +1066,30 @@ querystring.stringify({ foo: 'bar', baz: ['qux', 'quux'], corge: '' });
 http.createServer(function(request, response) {
   var i = 1024,
       data = '';
-  
+
   while (i--) {
     data += '.';
   }
-  
+
   if ((request.headers['accept-encoding'] || '').indexOf('gzip') !== -1) {
-    
+
 		zlib.gzip(data, function(err, data) {
 			response.writeHead(200, {
         'Content-Type': 'text/plain',
         'Content-Encoding': 'gzip'
       });
-      
+
       response.end(data);
     });
-    
+
   } else {
-    
+
     response.writeHead(200, {
       'Content-Type': 'text/plain'
     });
-    
+
     response.end(data);
-    
+
   }
 }).listen(80);
 ```
@@ -1101,14 +1109,14 @@ var options = {
 
 http.request(options, function(response) {
   var body = [];
-  
+
   response.on('data', function(chunk) {
 		body.push(chunk);
   });
-  
+
   response.on('end', function() {
 		body = Buffer.concat(body);
-    
+
     if (response.headers['content-encoding'] === 'gzip') {
       zlib.gunzip(body, function(err, data) {
         console.log(data.toString());
@@ -1305,7 +1313,7 @@ http.createServer(callback).listen(80, function() {
   var env = process.env,
       uid = parseInt(env['SUDO_UID'] || process.getuid(), 10),
       gid = parseInt(env['SUDO_GID'] || process.getgid(), 10);
-  
+
   process.setgid(gid);
   process.setuid(uid);
 });
@@ -1314,7 +1322,7 @@ http.createServer(callback).listen(80, function() {
 上例中有几点需要注意：
 
 1. 如果是通过 `sudo` 获取root权限的，运行程序的用户的 UID 和 GID 保存在环境变量 `SUDO_UID` 和 `SUDO_GID` 里边。如果是通过 `chmod +s` 方式获取root权限的，运行程序的用户的 UID 和 GID 可直接通过 `process.getuid` 和 `process.getgid` 方法获取。
-  
+
 2. `process.getuid` 和 `process.getgid` 方法只接受 `number` 类型的参数。
 
 3. **降权时必须先降 GID 再降 UID**，否则顺序反过来的话就没权限更改程序的 GID 了。
@@ -1394,7 +1402,7 @@ process.on('message', function (msg) {
 ```javascript
 function spawn(mainModule) {
   var worker = child_process.spawn('node', [mainModule]);
-  
+
   worker.on('exit', function (code) {
     if (code !== 0) spawn(mainModule);
   });
@@ -1411,7 +1419,7 @@ spawn('worker.js');
 
 - 使用 `process` 对象管理自身
 
-  
+
 
 - 使用 `child_process` 模块创建和管理子进程
 
@@ -1427,13 +1435,13 @@ NodeJS 最大的卖点——事件机制和异步IO，对开发者并不是透�
 function heavyCompute(n, callback) {
 	var count = 0,
       i, j;
-  
+
   for (i = n; i > 0; --i) {
 		for (j = n; j > 0; --j) {
 			count += 1;
     }
   }
-  
+
   callback(count);
 }
 
@@ -1612,7 +1620,7 @@ try {
   console.log('Error: %s', err.message);
 }
 
--- Console ------------------------------ 
+-- Console ------------------------------
 /Users/sanqi/Desktop/parent.js:4
     callback(fn());
              ^

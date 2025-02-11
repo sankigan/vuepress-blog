@@ -1,3 +1,13 @@
+---
+title: 网络安全
+date: 2019-3-21
+editLink: false
+tags:
+ - 网络与浏览器
+categories:
+ - 前端
+---
+
 ### XSS
 
 XSS，即`Cross Site Script`，中译是跨站脚本攻击，其原本缩写是CSS，但是为了和层叠样式表有所区分，因而在安全领域叫做XSS。
@@ -39,7 +49,7 @@ CSRF，即`Cross Site Request Forgery`，中译是跨站请求伪造，是一种
 - **添加token验证**
 
   要防御CSRF，关键在于在请求中放入攻击者所不能伪造的信息，并在服务器建立一个拦截器来验证这个token，如果请求中没有token或者token内容不正确，则认为可能是CSRF攻击而拒绝该请求。
-  
+
 ### SQL 注入
 
 所谓SQL注入，就是通过把 SQL 命令插入到 Web 表单提交或输入域名或页面请求的查询字符串，后台执行 SQL 语句时直接把前端传入的字段拿来做 SQL 查询。

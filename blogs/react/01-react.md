@@ -1,3 +1,13 @@
+---
+title: React 入门
+date: 2021-4-20
+editLink: false
+tags:
+ - React
+categories:
+ - 前端
+---
+
 ## [VDOM](/blogs/react/v-dom.md)
 
 ## [Redux](/blogs/react/redux.md)

@@ -1,3 +1,13 @@
+---
+title: 构造函数模式
+date: 2019-4-10
+editLink: false
+tags:
+ - 设计模式
+categories:
+ - 设计模式基础
+---
+
 # 构造函数模式
 
 ## 介绍
@@ -135,4 +145,3 @@ greet.split(" ")[0];
 greet.smile = true;
 console.log(typeof greet.smile);  // boolean
 ```
-

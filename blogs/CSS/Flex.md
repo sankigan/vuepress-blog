@@ -1,3 +1,13 @@
+---
+title: Flex
+date: 2019-3-21
+editLink: false
+tags:
+ - CSS
+categories:
+ - 前端
+---
+
 > 本文主要参考阮一峰大大的[这篇文章](<http://www.ruanyifeng.com/blog/2015/07/flex-grammar.html>)
 
 ![](http://www.ruanyifeng.com/blogimg/asset/2015/bg2015071002.png)

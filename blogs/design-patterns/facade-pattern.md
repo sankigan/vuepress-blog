@@ -1,3 +1,13 @@
+---
+title: 外观模式
+date: 2019-4-14
+editLink: false
+tags:
+ - 设计模式
+categories:
+ - 设计模式基础
+---
+
 # 外观模式
 
 ## 介绍

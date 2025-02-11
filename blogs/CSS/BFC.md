@@ -1,3 +1,13 @@
+---
+title: BFC
+date: 2019-9-9
+editLink: false
+tags:
+ - CSS
+categories:
+ - 前端
+---
+
 ## 什么是BFC（Block Formatting Context）？
 
 > BFC 直译为“块级格式化上下文”。它是一个独立的渲染区域，只有Block-level Box参与，它规定了内部的Block-level Box如何布局，并且与这个区域外部毫不相干。
@@ -73,7 +83,7 @@ BFC 对布局的影响主要体现在对 **`float`** 和 **`margin`** 两个属�
 ```html
 <div class="par">
     <div class="child"></div>
-    // 给这两个子div加浮动，浮动的结果，如果没有清除浮动的话，父div不会将下面两个div包裹， 
+    // 给这两个子div加浮动，浮动的结果，如果没有清除浮动的话，父div不会将下面两个div包裹，
     // 但还是在父div的范围之内。
     <div class="child"></div>
 </div>
