@@ -1,6 +1,7 @@
 ---
 title: BOM
 date: 2019-9-6
+editLink: false
 tags:
  - JavaScript
 categories:

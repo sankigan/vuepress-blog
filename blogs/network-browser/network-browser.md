@@ -1,30 +1,156 @@
+---
+title: 网络与浏览器
+date: 2020-6-16
+tags:
+ - 网络与浏览器
+categories:
+ - 前端
+---
+
 ## 缓存
 
-[戳我查看](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/%E7%BD%91%E7%BB%9C%E3%80%81%E6%B5%8F%E8%A7%88%E5%99%A8/%E7%BC%93%E5%AD%98.md)
+[戳我查看](/blogs/network-browser/cache.md)
 
 ## 在浏览器中，一个页面从输入URL到加载完成，都有哪些步骤？
 
-[戳我查看](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/%E7%BD%91%E7%BB%9C%E3%80%81%E6%B5%8F%E8%A7%88%E5%99%A8/%E4%BB%8E%E8%BE%93%E5%85%A5URL%E5%88%B0%E9%A1%B5%E9%9D%A2%E5%8A%A0%E8%BD%BD%E5%AE%8C%E6%88%90.md)
+[戳我查看](/blogs/network-browser/url-to-page.md)
 
 ## GET 和 POST 的区别有哪些？
 
-[戳我查看](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/%E7%BD%91%E7%BB%9C%E3%80%81%E6%B5%8F%E8%A7%88%E5%99%A8/GET%E5%92%8CPOST%E6%9C%80%E6%A0%B9%E6%9C%AC%E7%9A%84%E5%8C%BA%E5%88%AB.md)
+  > 参考了这几篇文章
+  > 1. [GET和POST：辩证看100 continue，以及最根本区别](<https://github.com/amandakelake/blog/issues/20>)
+  > 2. [99%的人都理解错了HTTP中GET与POST的区别](<https://zhuanlan.zhihu.com/p/22536382>)
+  > 3. [听说『99% 的人都理解错了 HTTP 中 GET 与 POST 的区别』？？](<https://zhuanlan.zhihu.com/p/25028045>)
 
-## 回流与重绘
+  在看到[GET和POST：辩证看100 continue，以及最根本区别](<https://github.com/amandakelake/blog/issues/20>)这篇文章之前，我也刚好刚看完[99%的人都理解错了HTTP中GET与POST的区别](<https://zhuanlan.zhihu.com/p/22536382>)这篇文章，但是看完之后又让我更加深入地了解了GET和POST!!!
 
-[戳我查看](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/%E7%BD%91%E7%BB%9C%E3%80%81%E6%B5%8F%E8%A7%88%E5%99%A8/%E5%9B%9E%E6%B5%81%E4%B8%8E%E9%87%8D%E7%BB%98.md)
+  文章2得出了两个言简意赅的结论：
+
+  > GET产生一个TCP数据包；POST产生两个TCP数据包
+
+  > 对于GET方式的请求，浏览器会把http header和data一并发送出去，服务器响应200；对于POST，浏览器先发送header，服务器响应100 continue，浏览器再发送data，服务器响应200 ok
+
+  文章3对文章2的结论提出了一些疑问，主要是关于首部`Expect: 100-continue`的区别。《HTTP权威指南》这样P62和附录C这样解释道
+
+  > 100 continue的目的是对**HTTP客户端应用程序有一个实体的主体部分要发送到服务器，但希望在发送之前查看一下服务器是否会接受这个实体**这种情况进行优化
+
+  客户端
+
+  > 如果客户端在向服务器发送一个实体，并愿意在发送实体之前等待100 continue响应，那么客户端就要发送一个携带了值为100 continue的Except请求首部。如果客户端没有发送实体，就不应该发送100 continue Except首部，因为这样会使服务器误以为客户端要发送一个实体
+
+  认真看这个地方，就会发现跟文章2中的区别，这里是客户端愿意发100 continue才会有响应，并不是每次都会有100 continue响应，再对比一下文章2的结论
+
+  > 对于POST，浏览器先发送header，服务器响应100 continue，浏览器再发送data，服务器响应200 ok
+
+  **区别就在这里**
+
+  服务器端
+
+  > 如果服务器收到一条带有值为100 continue的Except首部的请求，它会用100 continue响应或一条错误码来进行响应。服务器永远也不应该向没有发送100 continue期望的客户端发送100 continue状态码。
+  > 如果服务器在有机会发送100 continue响应之前就收到了部分（或者全部）的实体，说明服务器已经打算继续发送数据了，这样服务器就不需要发送这个状态码了，但是服务器完成请求之后，还是应该为请求发送一个最终状态码。
+
+  文章3得出的结论是
+
+  > 通过抓包发现，尽管会分两次，body就是紧随在header后面发送的，根本不存在『等待服务器响应』这一说
+
+  ***
+
+  这里是W3C的对比[HTTP 方法：GET 对比 POST](<http://www.w3school.com.cn/tags/html_ref_httpmethods.asp>)
+
+  ![](https://user-images.githubusercontent.com/25027560/36575667-2034615c-1887-11e8-877e-69a548ea4b9d.png)
+
+  首先，GET和POST是由HTTP协议定义的，Method和Data（URL，Body，Header）这两个概念没有必然的联系，使用哪个Method与应用层的数据如何传输是没有相互关系的。
+
+  HTTP没有要求，如果是POST，数据就要放在BODY中。也没有要求GET，数据（参数）就一定要放在URL中而不能放在BODY中。
+
+  HTTP协议明确地指出了，HTTP头和Body都没有长度的要求，URL长度上的限制主要是由服务器或浏览器造成的。
+
+  **`在用法上，一个用于获取数据，一个用于修改数据`**
+
+  **`在根本上，二者并没有什么区别`**
+
+  **`在细节上，有一些区别，需要展开讲吗？`**
+
+## 回流（Reflow）与重绘（Repaint）
+
+  当 `Render Tree` 中部分或全部元素的规模尺寸，结构或某些属性发生改变时，浏览器重新渲染部分或全部文档的过程称为 **`回流`**。每个页面至少需要一次回流，就是页面第一次加载的时候。在回流的时候，浏览器会使 `Render Tree` 中受到影响的部分失效，并重新构造这部分`Render Tree`，完成回流后，浏览器会重新绘制受影响的部分到屏幕中，该过程称为 **`重绘`**。
+
+  当页面中元素样式的改变并不影响它在文档流中的位置时，浏览器会将新样式赋予给元素并重新绘制它，这个过程称为 **`重绘`**。
+
+  **总结：回流必将引起重绘，而重绘不一定会引起回流。**
+
+### 回流何时发生？
+
+  - 添加或者删除可见的 DOM 元素
+  - 元素位置发生改变
+  - 元素尺寸改变——边距、填充、边框、宽度和高度
+  - 内容改变——比如文本或者图片大小改变而引起的计算值宽度和高度改变
+  - 页面渲染初始化
+  - 浏览器窗口尺寸改变
+
+  **举个栗子🌰**
+
+  ```javascript
+  var s = document.body.style;
+  s.padding = "2px";  // 回流+重绘
+  s.border = "1px solid red";  // 回流+重绘
+  s.color = "blue";  // 重绘
+  s.backgroundColor = "#CCC";  // 重绘
+  s.fontSize = "14px";  // 回流+重绘
+  // 添加node，回流+重绘
+  document.body.appendChild(document.createTextNode("abc!"));
+  ```
+
+### 性能影响
+
+  **回流比重绘的代价更高。**
+
+  有时即使仅仅回流一个单一的元素，它的父元素以及任何跟随它的元素也会发生回流。
+
+  现代浏览器会对频繁的回流或重绘操作进行优化：
+
+  浏览器会维护一个**队列**，把所有引起回流和重绘的操作放入队列中，如果队列中的任务数量或者时间间隔达到一个阈值，浏览器就会将队列清空，进行一次批处理，这样可以把多次回流和重绘变成一次。
+
+  当你访问以下属性或方法时，浏览器会立刻清空队列：
+
+  - `clientWidth`、`clientHeight`、`clientTop`、`clientLeft`
+  - `offsetWidth`、`offsetHeight`、`offsetTop`、`offsetLeft`
+  - `scrollWidth`、`scrollHeight`、`scrollTop`、`scrollLeft`
+  - `width`、`height`
+  - `getComputedStyle()`
+  - `getBoundingClientRect()`
+
+  因为队列中可能会有影响到这些属性或方法返回值的操作，即使你希望获取的信息与队列中操作引发的改变无关，浏览器也会强行清空队列，确保你拿到的值时最精确的。
+
+### 如何避免？
+
+  #### CSS
+
+  - 避免使用 `table` 布局
+  - 尽可能在 `DOM` 树的最末端改变 `class`
+  - 避免设置多层内联样式
+  - 将动画效果应用到 `position` 属性为 `absolute` 或 `fixed` 的元素上
+  - 避免使用 `css` 表达式（例如：`calc()` ）
+
+  #### JavaScript
+
+  - 避免频繁操作样式，最好一次性重写 `style` 属性，或者将样式列表定义为 `class` 并一次性更改 `class` 属性
+  - 避免频繁操作 DOM，创建一个 `documentFragment`，在它上面应用所有 DOM 操作，最后再把它添加到文档中（`document.createDocumentFragment()`）
+  - 也可以先为元素设置 `display: none` ，操作结束后再把它显示出来。因为在`display`属性为`none`的元素上进行的 DOM 操作不会引发回流和重绘
+  - 避免频繁读取会引发回流/重绘的属性，如果确实需要多次使用，就用一个变量缓存起来
+  - 对具有复杂动画的元素使用绝对定位，使它脱离文档流，否则会引起父元素及后续元素频繁回流
 
 ## 浏览器的渲染渲染过程与原理
 
-[戳我查看](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/%E7%BD%91%E7%BB%9C%E3%80%81%E6%B5%8F%E8%A7%88%E5%99%A8/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B%E4%B8%8E%E5%8E%9F%E7%90%86.md)
+[戳我查看](/blogs/network-browser/browser-rendering.md)
 
 ## 跨域
 
-[戳我查看](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/%E7%BD%91%E7%BB%9C%E3%80%81%E6%B5%8F%E8%A7%88%E5%99%A8/%E8%B7%A8%E5%9F%9F.md)
+[戳我查看](/blogs/network-browser/cross-domain.md)
 
 ## 安全
 
-[戳我查看](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/%E7%BD%91%E7%BB%9C%E3%80%81%E6%B5%8F%E8%A7%88%E5%99%A8/%E5%AE%89%E5%85%A8.md)
+[戳我查看](/blogs/network-browser/security.md)
 
 ## 登录鉴权
 
@@ -177,7 +303,49 @@ HTTP 是基于 TCP 的，每一个 HTTP 请求都需要进行三次握手。如�
 
 ## HTTPS
 
-[戳我查看](https://github.com/sankigan/Front-End-Interview-Summarize/blob/master/%E7%BD%91%E7%BB%9C%E3%80%81%E6%B5%8F%E8%A7%88%E5%99%A8/HTTPS.md)
+  在介绍 HTTPS 之前，先引入两个概念：**对称加密**和**非对称加密**。
+
+  1. **`对称加密`**：对称加密在加密和解密的过程中只使用一个密钥，这个密钥叫对称密钥，也叫共享密钥。
+  2. **`非对称加密`**：非对称加密在加密的过程中使用公开密钥，在解密的过程中使用私有密钥。
+
+  HTTPS 采用混合加密机制，将两种加密算法组合使用，充分利用各自的优点。**在交换共享密钥阶段使用非对称加密，在传输报文阶段使用对称加密**。
+
+  ## HTTPS 解决的问题
+
+  HTTPS 很好的解决了 HTTP 的三个缺点（被窃听、被篡改、被伪造），HTTPS 不是一种新的协议，它是 HTTP + SSL 的结合体。
+
+  **SSL（Secure Sockets Layer，安全套接层）** 及其继任者 **TLS（Transport Layer Security，传输层安全）** 是为网络通信提供安全及数据完整性的一种安全协议。TLS 与 SSL 在传输层对网络连接进行加密。
+
+  HTTPS 改变了通信方式，它由以前的 HTTP => TCP，改为 **HTTP => SSL => TCP**。
+
+  - 防监听
+
+    数据是加密的，所以监听到的数据是密文。
+
+  - 防伪装
+
+    伪装分客户端伪装和服务器伪装，通信双方携带证书，证书相当于身份证，由第三方颁布，很难伪造。
+
+  - 防纂改
+
+    HTTPS 对数据做了摘要，篡改数据会被感知到。
+
+## HTTPS 连接建立过程
+
+  - **服务器端需要认证的通信过程**
+
+    ![](http://img-blog.csdn.net/20160812210802573)
+
+    1. 客户端发送请求到服务器
+    2. 服务器返回证书和公钥，公钥作为证书的一部分而存在
+    3. 客户端验证证书和公钥的有效性，如果有效，则生成共享密钥并使用公钥加密发送到服务器
+    4. 服务器使用私钥解密数据，并使用收到的共享密钥加密数据，发送到客户端
+    5. 客户端使用共享密钥解密数据
+    6. SSL 加密建立
+
+  - **客户端认证的通信过程**
+
+    客户端需要认证的过程跟服务器需要认证的过程基本相同，并且少了最开始的两步。这种情况都是证书存储在客户端，并且应用场景比较少，一般金融才用，比如支付宝、银行客户端都需安装证书。
 
 ## HTTPS 有哪些缺点？
 

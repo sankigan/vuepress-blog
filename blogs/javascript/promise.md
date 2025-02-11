@@ -1,6 +1,7 @@
 ---
 title: Promise
 date: 2020-6-16
+editLink: false
 tags:
  - JavaScript
 categories:

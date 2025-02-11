@@ -1,5 +1,3 @@
-# 前端总结
-
 ## CORS
 
 ### [Access-Control-Allow-Credentials](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials)
@@ -37,11 +35,3 @@ Credentials 可以是 cookies、authorization headers 或 TLS client certificate
 1. 设置了 `crossorigin` 属性就相当于开启了 cors 校验。
 2. 开启 cors 校验之后，跨域的 script 资源在运行出错的时候，`window.onerror` 可以捕获到完整的错误信息。
 3. `crossorigin=use-credentials` 可以跨域带上 cookie。
-
-## git commit 、CHANGELOG 的标准自动化
-
-[git自动生成changelog及项目版本管理](https://juejin.cn/post/6844904147892830221)
-[使用标准commit生成changelog标准化](https://www.jianshu.com/p/8564d1281366)
-[Git Commit Message校验踩坑指南](https://zhuanlan.zhihu.com/p/391709116)
-[git commit 、CHANGELOG 的标准自动化](https://zhuanlan.zhihu.com/p/51894196)
-

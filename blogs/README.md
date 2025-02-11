@@ -1,3 +1,11 @@
+---
+title: 汇总
+date: 2021-4-24
+editLink: false
+categories:
+ - 前端
+---
+
 # Front-End Summary
 
 🌵 前端总结
@@ -8,11 +16,11 @@
 
 *君问归期未有期，巴山夜雨涨秋池。*
 
-[TypeScript](https://github.com/sankigan/Front-End-Summary/blob/master/TypeScript/Typescript.md)
+[TypeScript](/blogs/TypeScript/TypeScript.md)
 
 *All legends fall in the making.*
 
-[Node](https://github.com/sankigan/Front-End-Summary/blob/master/Node/NodeJS.md#jump1)
+[Node](/blogs/Node/NodeJS.md#jump1)
 
 [Express](https://github.com/sankigan/Front-End-Summary/blob/master/Node/Express.md)
 

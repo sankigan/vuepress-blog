@@ -1,6 +1,7 @@
 ---
 title: JavaScript 第一章
 date: 2020-6-16
+editLink: false
 tags:
  - JavaScript
 categories:
