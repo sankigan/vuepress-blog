@@ -15,7 +15,7 @@ export default defineUserConfig({
   },
   theme: recoTheme({
     logo: '/logo.png',
-    docsDir: './docs',
+    // docsDir: './docs',
     docsBranch: 'main',
     author: 'sankigan',
     lastUpdatedText: '更新于',
@@ -23,12 +23,12 @@ export default defineUserConfig({
     authorAvatar: '/avatar.jpg',
     repo: 'https://github.com/sankigan',
     docsRepo: 'https://github.com/sankigan/vuepress-blog',
-    // head: [
-    //   ['link', { rel: 'icon', href: 'favicon.ico' }]
-    // ],
+    head: [
+      ['link', { rel: 'icon', href: 'favicon.ico' }]
+    ],
     navbar: [
       { text: '首页', link: '/', icon: 'Home' },
-      { text: '文章', link: '/posts.html' },
+      { text: '文章', link: '/posts.html', icon: 'Blog' },
       {
         text: '分类',
         icon: 'Categories',
@@ -42,6 +42,7 @@ export default defineUserConfig({
       // { text: '项目', link: '/code', icon: 'Code' },
       {
         text: '文档',
+        icon: 'Doc',
         children: [
           { text: 'vuepress-reco', link: 'https://theme-reco.vuejs.press/' },
         ],
