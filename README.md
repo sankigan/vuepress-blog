@@ -13,7 +13,7 @@ bannerBrand:
   tagline: 等苦尽甘来那一天山河星月都做谢礼。
   buttons:
     - text: 开始阅读
-      link: /posts.html
+      link: /timeline.html
   socialLinks:
     - { icon: 'SimpleIconsGithub', link: 'https://github.com/sankigan' }
     - { icon: 'SimpleIconsLeetcode', link: 'https://leetcode.cn/u/sanqi/' }
