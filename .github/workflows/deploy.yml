@@ -26,6 +26,8 @@ jobs:
       - name: Commit and Push
         run: |-
           cd .vuepress/dist
+          git config --global user.email "sanqi_3737@163.com"
+          git config --global user.name "sanki"
           git init
           git add -A
           git checkout -b master
