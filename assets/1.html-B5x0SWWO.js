@@ -1,0 +1,1 @@
+import{_ as t,c as e,o as a}from"./app-CRUSJUWc.js";const o={};function c(r,s){return a(),e("div")}const n=t(o,[["render",c],["__file","1.html.vue"]]),i=JSON.parse('{"path":"/tags/shejimoshijichu/1.html","title":"","lang":"zh-CN","frontmatter":{"layout":"Categories"},"headers":[],"git":{},"filePathRelative":null}');export{n as comp,i as data};
