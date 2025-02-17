@@ -3,6 +3,10 @@
 # 确保脚本抛出遇到的错误
 set -e
 
+git add .
+git commit -m 'update'
+git push -f git@github.com:sankigan/vuepress-blog.git main
+
 # 生成静态文件
 npm run build
 
