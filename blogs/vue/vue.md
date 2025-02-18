@@ -785,3 +785,82 @@ const app = new Vue({
 
 ## SPA 首屏加载速度慢怎么解决
 
+### 什么是首屏加载
+
+首屏时间（First Contentful Paint），指的是浏览器从响应用户输入网址地址，到首屏内容渲染完成的时间，此时整个网页不一定要全部渲染完成，但需要展示当前视窗需要的内容。可以通过 `performance` 来计算出首屏时间：
+
+```js
+performance.getEntriesByName('first-contentful-paint')[0].startTime
+
+// performance.getEntriesByName("first-contentful-paint")[0]
+// 会返回一个 PerformancePaintTiming 的实例，结构如下
+{
+  name: "first-contentful-paint",
+  entryType: "paint",
+  startTime: 240,
+  duration: 0,
+};
+```
+
+### 加载慢的原因
+
+- 网络延时问题
+- 资源文件体积是否过大
+- 资源是否重复发送请求去加载了
+- 加载脚本的时候，渲染内容堵塞了
+
+### 解决方案
+
+- 减小入口文件体积
+- 静态资源本地缓存
+- UI 框架按需加载
+- 图片资源的压缩
+- 组件重复打包
+- 开启 `GZip` 压缩
+- 使用 SSR
+
+#### 减小入口文件体积
+
+常用的手段是路由懒加载，把不同路由对应的组件分割成不同的代码块，待路由被请求的时候会单独打包路由，使得入口文件变小，加载速度大大增加
+
+在 `vue-router` 配置路由的时候，采用动态加载路由的形式
+
+```js
+routes: [
+  path: 'Blogs',
+  name: 'ShowBlogs',
+  component: () => import('./component/ShowBlogs.vue')
+]
+```
+
+以函数的形式加载路由，这样就可以把各自的路由文件分别打包，只有在解析给定的路由时，才会加载路由组件
+
+#### 静态资源本地缓存
+
+后端返回资源：
+
+- 采用 HTTP 缓存，设置 `Cache-Control`，`Last-Modified`，`E-tag` 等响应头
+- 采用 `Servive Worker` 离线缓存
+
+前端合理利用 `localStorage`
+
+#### UI框架按需加载
+
+在日常使用 UI 框架，例如 `Element-UI`，经常直接引用整个 UI 库
+
+```js
+import ElementUI from 'element-ui';
+Vue.use(ElementUI);
+```
+
+但实际上我用到的组件只有其中几个，所以要按需引用
+
+```js
+import { Button, Input, Pagination } from 'element-ui';
+Vue.use(Button);
+Vue.use(Input);
+Vue.use(Pagination);
+```
+
+#### 组件重复打包
+
