@@ -863,3 +863,54 @@ Vue.use(Pagination);
 ```
 
 #### 组件重复打包
+
+假设 `A.js` 文件是一个常用的库，现在有多个路由使用了 `A.js` 文件，这就造成了重复下载。解决方案：在 webpack 的 config 文件中，修改 `CommonsChunkPlugin` 的配置
+
+```js
+minChunks: 3
+```
+
+`minChunks` 为 3 表示会把使用 3 次以上的包抽离出来，放进公共依赖文件，避免了重复加载组件
+
+#### 图片资源的压缩
+
+图片资源虽然不在编码过程中，但它却是对页面性能影响最大的因素
+
+对与所有的图片资源，我们可以进行适当的压缩
+
+对页面上使用到的 icon，可以使用在线字体图标，或者雪碧图，将众多小图标合并到同一张图上，用以减轻 `http` 请求压力
+
+#### 开启 GZip 压缩
+
+拆完包之后，我们再用 gzip 做一下压缩，安装 `compression-webpack-plugin` 后，在 `vue.config.js` 中引入并修改 webpack 配置
+
+```js
+const CompressionPlugin = require('compression-webpack-plugin');
+configureWebpack: (config) => {
+  if (process.env.NODE_ENV === 'production') {
+    config.mode = 'production';
+    return {
+      plugins: [new CompressionPlugin({
+        test: /\.js$|\.html$|\.css/, // 匹配文件后缀
+        threshold: 10240, // 对超过 10k 的数据进行压缩
+        deleteOriginalAssets: false, // 是否删除源文件
+      })]
+    }
+  }
+}
+```
+
+在服务器我们也要做相应的配置，如果发送请求的浏览器支持 gzip，就发送给它 gzip 格式的文件
+
+#### 使用 SSR
+
+SSR，也就是服务端渲染，组件或页面通过服务器生成 html 字符串，再发送到浏览器
+
+### 总结
+
+减少首屏渲染时间的方法有很多，总得来讲可以氛围两大部分：`资源加载优化` 和 `页面渲染优化`
+
+![](https://static.vue-js.com/4fafe900-3acc-11eb-85f6-6fac77c0c9b3.png)
+
+## 为什么 `data` 属性是一个函数而不是一个对象？
+
