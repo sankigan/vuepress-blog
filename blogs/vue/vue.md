@@ -197,7 +197,7 @@ export const transformIf = createStructuralDirectiveTransform(
 
 ### 源码分析
 
-首先找到 `vue` 的构造函数，[src\core\instance\index.js](https://github.com/vuejs/vue/blob/main/src/core/instance/index.ts#L9)
+首先找到 `vue` 的构造函数，[src/core/instance/index.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/index.ts#L9)
 
 ```js
 function Vue (options) {
@@ -220,7 +220,7 @@ lifecycleMixin(Vue);// 定义 _update  $forceUpdate  $destroy
 renderMixin(Vue);   // 定义 _render 返回虚拟dom
 ```
 
-首先可以看 `initMixin` 方法，发现该方法在 Vue 原型上定义了 `_init` 方法，源码：[src/core/instance/init.js](https://github.com/vuejs/vue/blob/main/src/core/instance/init.ts#L17)
+首先可以看 `initMixin` 方法，发现该方法在 Vue 原型上定义了 `_init` 方法，源码：[src/core/instance/init.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/init.ts#L17)
 
 ```js
 Vue.prototype._init = function (options?: Object) {
@@ -293,7 +293,7 @@ Vue.prototype._init = function (options?: Object) {
 - 到了 `created` 的时候，数据已经初始化完成，能够访问 `data`、`props` 这些属性，但这时候并未完成 `dom` 的挂载，因此无法访问到 `dom` 元素
 - 挂载方法是调用 `vm.$mount` 方法
 
-其中，`initState` 方法是完成 `props/methods/data/watch/computed/watch` 的初始化，源码：[src/core/instance/state.js](https://github.com/vuejs/vue/blob/main/src/core/instance/state.ts#L52)
+其中，`initState` 方法是完成 `props/methods/data/computed/watch` 的初始化，源码：[src/core/instance/state.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/state.ts#L52)
 
 ```js
 export function initState (vm: Component) {
@@ -317,7 +317,7 @@ export function initState (vm: Component) {
 }
 ```
 
-我们这里主要看初始化 `data` 的方法为 `initData`，它与 `initState` 在同一文件中，源码：[src/core/instance/state.js](https://github.com/vuejs/vue/blob/main/src/core/instance/state.ts#L128)
+我们这里主要看初始化 `data` 的方法为 `initData`，它与 `initState` 在同一文件中，源码：[src/core/instance/state.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/state.ts#L128)
 
 ```js
 function initData (vm: Component) {
@@ -373,8 +373,8 @@ function initData (vm: Component) {
 - 初始化顺序：`props`、`methods`、`data`
 - `data` 定义的时候可选择函数形式或者对象形式（组件只能为函数形式）
 
-上文还提到挂载方式是调用 `vm.$mount` 方法，源码：[src/platforms/web
-/runtime-with-compiler.js](https://github.com/vuejs/vue/blob/main/src/platforms/web/runtime-with-compiler.ts#L21)
+`_init` 中还提到挂载方式是调用 `vm.$mount` 方法，源码：[src/platforms/web
+/runtime-with-compiler.ts](https://github.com/vuejs/vue/blob/main/src/platforms/web/runtime-with-compiler.ts#L21)
 
 ```js
 Vue.prototype.$mount = function (
@@ -465,7 +465,7 @@ Vue.prototype.$mount = function (
 - 将 `ast` 描述符解析成字符串
 - 生成 `render` 函数
 
-生成 `render` 函数，挂载到 `vm` 上后，会再次调用 `mount` 方法，源码：[src/platforms/web/runtime/index.js](https://github.com/vuejs/vue/blob/main/src/platforms/web/runtime/index.ts#L36)
+生成 `render` 函数，挂载到 `vm` 上后，会再次调用 `mount` 方法，源码：[src/platforms/web/runtime/index.ts](https://github.com/vuejs/vue/blob/main/src/platforms/web/runtime/index.ts#L36)
 
 ```js
 // public mount method
@@ -479,7 +479,7 @@ Vue.prototype.$mount = function (
 }
 ```
 
-其中调用 `mountComponent` 渲染组件，源码：[src/core/instance/lifecycle.js](https://github.com/vuejs/vue/blob/main/src/core/instance/lifecycle.ts#L147)\
+其中调用 `mountComponent` 渲染组件，源码：[src/core/instance/lifecycle.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/lifecycle.ts#L147)\
 
 ```js
 export function mountComponent (
@@ -570,7 +570,7 @@ export function mountComponent (
 - 定义 `updateComponent` 渲染页面视图的方法
 - 监听组件数据，一旦发生变化，触发 `beforeUpdate` 生命钩子
 
-`updateComponent` 方法主要执行在 `vue` 初始化时声明的 `render`、`update` 方法。`render` 的作用主要是生成 `vnode`，源码：[src\core\instance\render.js](https://github.com/vuejs/vue/blob/main/src/core/instance/render.ts#L103)
+`updateComponent` 方法主要执行在 `vue` 初始化时声明的 `render`、`update` 方法。`render` 的作用主要是生成 `vnode`，源码：[src/core/instance/render.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/render.ts#L103)
 
 ```js
 // 定义vue 原型上的render方法
