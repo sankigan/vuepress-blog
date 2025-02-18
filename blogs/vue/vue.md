@@ -960,4 +960,3 @@ Component.prototype.data = function() {
 vue 组件可能会有很多个实例，采用函数返回一个全新的 `data`，使得每个实例对象的数据不会受到其他实例的污染
 
 ### 源码分析
-
