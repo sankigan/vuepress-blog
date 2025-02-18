@@ -914,3 +914,50 @@ SSR，也就是服务端渲染，组件或页面通过服务器生成 html 字�
 
 ## 为什么 `data` 属性是一个函数而不是一个对象？
 
+创建 vue 实例时，定义的 `data` 属性既可以是一个对象，也可以是一个函数。而在组件中定义 `data` 属性，只能是一个函数
+
+### 组件 `data` 定义函数与对象的区别
+
+上面讲到组件 `data` 必须是一个函数，不知道大家有没有思考过这是为什么呢？
+
+在我们定义好一个组件的时候，vue 最终都会通过 `Vue.extend()` 构建组件实例
+
+这里我们模仿组件构造函数，定义 `data` 属性，采用对象的形式
+
+```js
+function Component() {}
+
+Component.prototype.data = {
+  count: 0
+};
+```
+
+创建两个组件实例
+
+```js
+const componentA = new Component();
+const componentB = new Component();
+```
+
+修改 `componentA` 组件 `data` 属性的值，`componentB` 中的值也发生了改变
+
+```js
+console.log(componentB.data.count); // 0
+componentA.data.count = 1;
+console.log(componentB.data.count); // 1
+```
+
+产生这样的原因就是这两者共用了同一个内存地址，`componentA` 修改内容的同时，`componentB` 的值也被改变。如果我们采用函数的形式，则不会出现这种情况（函数返回的对象内存地址并不相同）
+
+```js
+function Component() {}
+
+Component.prototype.data = function() {
+  return { count: 0 };
+};
+```
+
+vue 组件可能会有很多个实例，采用函数返回一个全新的 `data`，使得每个实例对象的数据不会受到其他实例的污染
+
+### 源码分析
+
