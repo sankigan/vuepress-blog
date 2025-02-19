@@ -40,7 +40,7 @@ export default defineUserConfig({
         ],
       },
       { text: '标签', link: '/tags/JavaScript/1', icon: 'Tag' },
-      { text: '归档', link: '/timeline.html', icon: 'Calendar', },
+      { text: '时间轴', link: '/timeline.html', icon: 'Calendar', },
       // { text: '项目', link: '/code', icon: 'Code' },
       {
         text: '文档',
