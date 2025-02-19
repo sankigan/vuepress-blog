@@ -125,9 +125,9 @@ miniRouter.push('/page2');
 
 控制手段：`v-show` 隐藏是为该元素添加 `css--display:none`，dom 元素依旧存在。`v-if` 显示隐藏是将 `dom` 元素整个添加或删除
 
-编译过程：`v-if` 切换有一个局部编译/卸载的过程，切换过程种合适地销毁和重建内部的事件监听和子组件；`v-show` 只是简单的基于css切换
+编译过程：`v-if` 切换有一个局部编译/卸载的过程，切换过程中合适地销毁和重建内部的事件监听和子组件；`v-show` 只是简单的基于css切换
 
-编译条件：`v-if` 是真正的条件渲染，它会确保在切换过程中条件块内的事件监听器和子组件适当地被销毁和重建。只有渲染条件为假时，并不做操作，知道为真才渲染
+编译条件：`v-if` 是真正的条件渲染，它会确保在切换过程中条件块内的事件监听器和子组件适当地被销毁和重建。只有渲染条件为假时，并不做操作，直到为真才渲染
 
 性能消耗：`v-if` 有更高的切换消耗，`v-show` 有更高的初始渲染消耗
 
@@ -197,7 +197,7 @@ export const transformIf = createStructuralDirectiveTransform(
 
 ### 源码分析
 
-首先找到 `vue` 的构造函数，[src/core/instance/index.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/index.ts#L9)
+首先找到 Vue 的构造函数，[src/core/instance/index.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/index.ts#L9)
 
 ```js
 function Vue (options) {
@@ -570,7 +570,7 @@ export function mountComponent (
 - 定义 `updateComponent` 渲染页面视图的方法
 - 监听组件数据，一旦发生变化，触发 `beforeUpdate` 生命钩子
 
-`updateComponent` 方法主要执行在 `vue` 初始化时声明的 `render`、`update` 方法。`render` 的作用主要是生成 `vnode`，源码：[src/core/instance/render.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/render.ts#L103)
+`updateComponent` 方法主要执行在 Vue 初始化时声明的 `render`、`update` 方法。`render` 的作用主要是生成 `vnode`，源码：[src/core/instance/render.ts](https://github.com/vuejs/vue/blob/main/src/core/instance/render.ts#L103)
 
 ```js
 // 定义vue 原型上的render方法
@@ -719,7 +719,7 @@ Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
 </div>
 ```
 
-创建 `vue` 实例，存放 `isShow` 和 `items` 数据
+创建 Vue 实例，存放 `isShow` 和 `items` 数据
 
 ```js
 const app = new Vue({
@@ -960,3 +960,263 @@ Component.prototype.data = function() {
 vue 组件可能会有很多个实例，采用函数返回一个全新的 `data`，使得每个实例对象的数据不会受到其他实例的污染
 
 ### 源码分析
+
+组件在创建的时候，会进行选项的合并，自定义组件会进入 `mergeOptions` 进行选项合并
+
+```js
+Vue.prototype._init = function (options?: Object) {
+  ...
+  // merge options
+  if (options && options._isComponent) {
+    // optimize internal component instantiation
+    // since dynamic options merging is pretty slow, and none of the
+    // internal component options needs special treatment.
+    initInternalComponent(vm, options)
+  } else {
+    vm.$options = mergeOptions(
+      resolveConstructorOptions(vm.constructor),
+      options || {},
+      vm
+    )
+  }
+  ...
+}
+```
+
+定义 `data` 会进行数据校验，这个时候 `vm` 实例为 `undefined`，进入 `if` 判断，若 `data` 类型不是 `function`，则出现警告提示
+
+```js
+strats.data = function (
+  parentVal: any,
+  childVal: any,
+  vm?: Component
+): ?Function {
+  if (!vm) {
+    if (childVal && typeof childVal !== "function") {
+      process.env.NODE_ENV !== "production" &&
+        warn(
+          'The "data" option should be a function ' +
+            "that returns a per-instance value in component " +
+            "definitions.",
+          vm
+        );
+
+      return parentVal;
+    }
+    return mergeDataOrFn(parentVal, childVal);
+  }
+  return mergeDataOrFn(parentVal, childVal, vm);
+};
+```
+
+## 为什么动态给 Vue 的 `data` 添加一个新的属性界面不刷新？
+
+### 原理分析
+
+Vue2.x 是通过 `Object.defineProperty` 实现数据响应式
+
+```js
+const obj = {};
+Object.defineProperty(obj, 'foo', {
+  get() {
+    console.log(`get foo: ${val}`);
+    return val;
+  },
+  set(newVal) {
+    if (newVal !== val) {
+      console.log(`set foo: ${newVal}`);
+      val = newVal;
+    }
+  }
+});
+```
+
+当我们访问 `foo` 属性和给 `foo` 赋值的时候都能触发 `setter` 和 `getter`，但是我们为 `obj` 添加新属性的时候，却无法触发事件属性的拦截。原因是一开始 `obj` 的 `foo` 属性被设成了响应式数据，而 `bar` 是后面新增的属性，并没有通过 `Object.defineProperty` 设置成响应式数据
+
+### 解决方案
+
+Vue 不允许在已经创建的实例上动态添加新的响应式属性，若想实现数据与视图的同步更新，可采取下面三种解决方案：
+
+- `Vue.set()`
+- `Object.assign()`
+- `$forceUpdate()`
+
+#### Vue.set(target, propertyName/index, value)
+
+通过 `Vue.set` 向响应式对象中添加一个 `property`，并确保这个新 `property` 同样是响应式的，且触发视图更新，源码：[src/core/observer/index.ts](https://github.com/vuejs/vue/blob/main/src/core/observer/index.ts#L223)
+
+```js
+function set (target: Array<any> | Object, key: any, val: any): any {
+  ...
+  defineReactive(ob.value, key, val);
+  ob.dep.notify();
+  return val;
+}
+```
+
+这里无非再次调用 `defineProperty` 方法，实现新增属性的响应式。关于 `defineReactive` 方法，内部还是通过 `Object.defineProperty` 实现属性拦截
+
+```js
+function defineReactive(obj, key, val) {
+  Object.defineProperty(obj, key, {
+    get() {
+      console.log(`get ${key}:${val}`);
+      return val;
+    },
+    set(newVal) {
+      if (newVal !== val) {
+        console.log(`set ${key}:${newVal}`);
+        val = newVal;
+      }
+    }
+  });
+}
+```
+
+#### Object.assign
+
+直接使用 `Object.assign` 添加到对象的新属性不会触发更新，应创建一个新的对象，合并原对象和混入对象的属性
+
+```js
+this.someObject = Object.assign({}, this.someObject, { newProperty1: 1, newProperty1: 2, ... });
+```
+
+#### $forceUpdate
+
+如果你发现你需要在 Vue 中做一次强制更新，99.9% 的情况，是你在某个地方做错了事，`$forceUpdate` 迫使 Vue 实例重新渲染
+
+PS：仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件
+
+### 小结
+
+- 如果为对象添加少量的新属性，可以直接采用 `Vue.set()`
+- 如果需要为新对象添加大量的新属性，则通过 `Object.assign()` 创建新对象
+- 如果你实在不知道怎么操作时，可采取 `$forceUpdate` 进行强制刷新（不建议）
+
+PS：`vue3` 是通过 `proxy` 实现数据响应式的，直接动态添加新属性仍可以实现属性响应式
+
+## Vue 组件之间的通信方式总结
+
+### 组件间通信的分类
+
+- 父子组件之间的通信
+- 兄弟组件之间的通信
+- 祖孙与后代组件之间的通信
+- 非关系组件间之间的通信
+
+![](https://static.vue-js.com/85b92400-3aca-11eb-ab90-d9ae814b240d.png)
+
+### 组件间通信的方案
+
+- 通过 `props` 传递数据
+- 通过 `$emit` 触发自定义事件
+- 使用 `ref`
+- EventBus
+- `$parent` 或 `$root`
+- `attrs` 与 `listeners`
+- `provide` 与 `inject`
+- Vuex
+
+#### 通过 `props` 传递
+
+适用场景：父组件传递数据给子组件
+
+子组件设置 `props` 属性，定义接收父组件传递过来的参数，父组件在使用子组件标签中通过字面量来传递值
+
+#### 通过 `$emit` 触发自定义事件
+
+适用场景：子组件传递数据给父组件
+
+子组件通过 `$emit` 触发自定义事件，`$emit` 第二个参数为传递的数值，父组件绑定监听器获取到子组件传递过来的值
+
+#### 使用 `ref`
+
+父组件在使用子组件的时候设置 `ref`，父组件通过设置子组件 `ref` 来获取数据
+
+#### EventBus
+
+适用场景：兄弟组件传值
+
+创建一个中央事件总线 `EventBus`，兄弟组件通过 `$emit` 触发自定义事件，`$emit` 第二个参数为传递的数值，另一个兄弟组件通过 `$on` 监听自定义事件
+
+```js
+class Bus {
+  constructor() {
+    this.callbacks = {};
+  }
+
+  $on(name, fn) {
+    this.callbacks[name] = this.callbacks[name] || [];
+    this.callbacks[name].push(fn);
+  }
+
+  $emit(name, args) {
+    if (this.callbacks[name]) {
+      this.callbacks[name].forEach(cb => cb(args));
+    }
+  }
+}
+
+// main.js
+Vue.prototype.$bus = new Bus(); // 将 $bus 挂载到 Vue 实例的原型上
+// 另一种方式
+Vue.prototype.$bus = new Vue(); // Vue 已经实现了 Bus 的功能
+```
+
+```js
+// Children1.vue
+this.$bus.$emit('foo');
+// Children2.vue
+this.$bus.$on('foo', this.handle);
+```
+
+#### `$parent` 或 `$root`
+
+适用场景：兄弟组件传值
+
+通过共同祖辈 `$parent` 或者 `$root` 搭建通信桥连
+
+兄弟组件：`this.$parent.on('add', this.add)`
+
+另一个兄弟组件：`this.$parent.emit('add')`
+
+#### `attrs` 与 `listeners`
+
+适用场景：父组件传递数据给子组件
+
+设置批量向下传属性 `$attrs` 和 `$listeners`，包含了父级作用域中不作为 `prop` 被识别（且获取）的特性绑定（class 和 style 除外），可以通过 `v-bind=$attrs` 传入内部组件
+
+#### `provide` 与 `inject`
+
+适用场景：祖先传递数据给子孙
+
+在祖先组件定义 `provide` 属性，返回传递的值，在后代组件通过 `inject` 接收组件传递过来的值
+
+```js
+// 祖先组件
+provide() {
+  return {
+    foo: 'foo',
+  };
+}
+
+// 后代组件
+inject: ['foo'] // 获取到祖先组件传递过来的值
+```
+
+#### Vuex
+
+适用场景：复杂关系的组件数据传递
+
+Vuex 的作用相当于一个用来存储共享变量的容器
+
+![](https://static.vue-js.com/fa207cd0-3aca-11eb-ab90-d9ae814b240d.png)
+
+- `state` 用来存储共享变量的地方
+- `getter`：可以增加一个 `getter` 派生状态（相当于 `store` 中的计算属性），用来获取共享变量的的值
+- `mutations` 用来存储修改 `state` 的方法
+- `actions` 也是用来存放修改 `state` 的方法，不过 `action` 是在 `mutations` 的基础上进行。常用来做一些异步操作
+
+## 双向数据绑定
+
+
