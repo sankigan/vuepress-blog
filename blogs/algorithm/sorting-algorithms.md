@@ -23,10 +23,8 @@ categories:
 | 桶排序   | O(n+k)             | O(n^2)             | O(n+k)             | O(n+k)     | 外部排序 | 稳定   |
 | 基数排序 | O(n*k)             | O(n*k)             | O(n*k)             | O(n+k)     | 外部排序 | 稳定   |
 
-![](https://oss.javaguide.cn/github/javaguide/cs-basics/sorting-algorithms/sort2.png)
-
 ```js
-// 定义交换函数
+// 定义全局交换函数
 function swap(arr, i, j) {
   [arr[i], arr[j]] = [arr[j], arr[i]];
 }
