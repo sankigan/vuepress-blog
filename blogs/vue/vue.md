@@ -1420,7 +1420,7 @@ function defineReactive(obj, key, val) {
 }
 ```
 
-## Vue 中的 $nextTick 有什么作用
+## Vue $nextTick
 
 ### nextTick 是什么
 
@@ -1506,3 +1506,313 @@ console.log(this.$el.textContent) // 修改后的值
 
 ### 实现原理
 
+源码位置：[src/core/util/next-tick.ts](https://github.com/vuejs/vue/blob/main/src/core/util/next-tick.ts)
+
+`callbacks` 也就是异步操作队列，`callbacks` 新增回调函数后又执行了 `timeFunc` 函数，`pending` 是用来标识同一个时间只能执行一次。
+
+```js
+export function nextTick(cb?: Function, ctx?: Object) {
+  let _resolve;
+
+  // cb 回调函数会经统一处理压入 callbacks 数组
+  callbacks.push(() => {
+    if (cb) {
+      // 给 cb 回调函数执行加上了 try-catch 错误处理
+      try {
+        cb.call(ctx);
+      } catch (e) {
+        handleError(e, ctx, 'nextTick');
+      }
+    } else if (_resolve) {
+      _resolve(ctx);
+    }
+  });
+
+  // 执行异步延迟函数 timerFunc
+  if (!pending) {
+    pending = true;
+    timerFunc();
+  }
+
+  // 当 nextTick 没有传入函数参数的时候，返回一个 Promise 化的调用
+  if (!cb && typeof Promise !== 'undefined') {
+    return new Promise(resolve => {
+      _resolve = resolve;
+    });
+  }
+}
+```
+
+`timerFunc` 函数定义，这里是根据当前环境支持什么方法则确定调用哪个，分别有：
+
+`Promise.then`、`MutationObserver`、`setImmediate`、`setTimeout`
+
+通过上面任意一种方法，进行降级操作
+
+```js
+export let isUsingMicroTask = false
+if (typeof Promise !== 'undefined' && isNative(Promise)) {
+  // 判断1：是否原生支持Promise
+  const p = Promise.resolve()
+  timerFunc = () => {
+    p.then(flushCallbacks)
+    if (isIOS) setTimeout(noop)
+  }
+  isUsingMicroTask = true
+} else if (!isIE && typeof MutationObserver !== 'undefined' && (
+  isNative(MutationObserver) ||
+  MutationObserver.toString() === '[object MutationObserverConstructor]'
+)) {
+  // 判断2：是否原生支持MutationObserver
+  let counter = 1
+  const observer = new MutationObserver(flushCallbacks)
+  const textNode = document.createTextNode(String(counter))
+  observer.observe(textNode, {
+    characterData: true
+  })
+  timerFunc = () => {
+    counter = (counter + 1) % 2
+    textNode.data = String(counter)
+  }
+  isUsingMicroTask = true
+} else if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
+  // 判断3：是否原生支持setImmediate
+  timerFunc = () => {
+    setImmediate(flushCallbacks)
+  }
+} else {
+  // 判断4：上面都不行，直接用setTimeout
+  timerFunc = () => {
+    setTimeout(flushCallbacks, 0)
+  }
+}
+```
+
+无论是微任务还是宏任务，都会放到 `flushCallbacks` 使用，这里将 `callbacks` 里面的函数复制一份，同时 `callbacks` 置空，依次执行 `callbacks` 里面的函数。
+
+```js
+function flushCallbacks() {
+  pending = false;
+  const copies = callbacks.slice(0);
+  callbacks.length = 0;
+  for (let i = 0; i < copies.length; ++i) {
+    copies[i]();
+  }
+}
+```
+
+#### 小结
+
+1. 把回调函数放入 `callbacks` 等待执行
+2. 将执行函数放到微任务或者宏任务中
+3. 事件循环到了微任务或者宏任务，执行函数依次执行 `callbacks` 中的回调
+
+## Vue mixin
+
+### mixin 是什么
+
+`mixin` 是面向对象程序设计语言中的类，提供了方法的实现。其他类可以访问 `mixin` 类的方法而不必成为其子类。
+
+`mixin` 类通常作为功能模块使用，在需要该功能时“混入”，有利于代码复用又避免了多继承的复杂。
+
+#### Vue 中的 `mixin`
+
+> `mixin`（混入），提供了一种非常灵活的方式，来分发 Vue 组件中的可复用功能。
+
+本质上是一个 `js` 对象，它可以包含我们组件中任意功能选项，如 `data`、`components`、`methods`、`created`、`computed` 等等。
+
+我们只要将共用的功能以对象的方式传入 `mixins` 选项中，当组件使用 `mixins` 对象时所有 `mixins` 对象的选项都将被混入该组件本身的选项中来。
+
+在 Vue 中我们可以使用 **局部混入** 和 **全局混入**
+
+#### 局部混入
+
+定义一个 `mixin` 对象，有组件 `options` 的 `data`、`methods` 属性
+
+```js
+var myMixin = {
+  created: function () {
+    this.hello()
+  },
+  methods: {
+    hello: function () {
+      console.log('hello from mixin!')
+    }
+  }
+}
+```
+
+组件通过 `mixins` 属性调用 `mixin` 对象
+
+```js
+Vue.component('componentA',{
+  mixins: [myMixin]
+})
+```
+
+该组件在使用的时候，混合了 `mixin` 里面的方法，在自动执行 `created` 生命钩子，执行 `hello` 方法
+
+#### 全局混入
+
+通过 `Vue.mixin()` 进行全局混入
+
+```js
+Vue.mixin({
+  created: function() {
+    console.log('全局混入')
+  }
+})
+```
+
+使用全局混入需要特别注意，因为它会影响到每一个组件实例（包括第三方组件）
+
+PS：全局混入常用于插件的编写
+
+#### 注意事项
+
+当组件存在于 `mixin` 对象相同的选项的时候，进行递归合并的时候组件的选项会覆盖 `mixin` 的选项。
+
+但是如果相同选项为生命周期钩子的时候，会合并成一个数组，先执行 `mixin` 的钩子，再执行组件的狗子。
+
+### 使用场景
+
+在日常的开发中，我们经常会遇到在不同的组件中经常会需要用到一些相同或者相似的代码，这些代码的功能相对独立。
+
+这时，可以通过 Vue 的 mixin 功能将相同或者相似的代码提出来
+
+举个例子
+
+定义一个 `Modal` 弹窗组件，内部通过 `isShowing` 来控制显示
+
+```js
+const Modal = {
+  template: '#modal',
+  data() {
+    return {
+      isShowing: false
+    }
+  },
+  methods: {
+    toggleShow() {
+      this.isShowing = !this.isShowing;
+    }
+  }
+}
+```
+
+定义一个 `tooltip` 提示框，内部通过 `isShowing` 来控制显示
+
+```js
+const Tooltip = {
+  template: '#tooltip',
+  data() {
+    return {
+      isShowing: false
+    }
+  },
+  methods: {
+    toggleShow() {
+      this.isShowing = !this.isShowing;
+    }
+  }
+}
+```
+
+通过观察上面两个组件，发现二者的逻辑是相同，代码控制显示也是相同的，这时 `mixin` 就派上用场了。
+
+首先抽出共同代码，编写一个 `mixin`
+
+```js
+const toggle = {
+  data() {
+    return {
+      isShowing: false
+    }
+  },
+  methods: {
+    toggleShow() {
+      this.isShowing = !this.isShowing;
+    }
+  }
+}
+```
+
+两个组件在使用上，只需要引入 `mixin`
+
+```js
+const Modal = {
+  template: '#modal',
+  mixins: [toggle]
+}
+
+const Tooltip = {
+  template: 'tooltip',
+  mixins: [toggle]
+}
+```
+
+### 源码分析
+
+首先从 `Vue.mixin` 入手，源码位置：[src/core/global-api/mixin.ts](https://github.com/vuejs/vue/blob/main/src/core/global-api/mixin.ts)
+
+```js
+export function initMixin(Vue: GlobalAPI) {
+  Vue.mixin = function (mixin: Object) {
+    this.options = mergeOptions(this.options, mixin)
+    return this
+  }
+}
+```
+
+主要是调用 `mergeOptions` 方法，源码位置：[src/core/util/options.ts](https://github.com/vuejs/vue/blob/main/src/core/util/options.ts)
+
+```js
+export function mergeOptions (
+  parent: Object,
+  child: Object,
+  vm?: Component
+): Object {
+
+  if (child.mixins) { // 判断有没有mixin 也就是mixin里面挂mixin的情况 有的话递归进行合并
+    for (let i = 0, l = child.mixins.length; i < l; i++) {
+      parent = mergeOptions(parent, child.mixins[i], vm)
+    }
+  }
+
+  const options = {}
+  let key
+  for (key in parent) {
+    mergeField(key) // 先遍历parent的key 调对应的strats[XXX]方法进行合并
+  }
+  for (key in child) {
+    if (!hasOwn(parent, key)) { // 如果parent已经处理过某个key 就不处理了
+      mergeField(key) // 处理child中的key 也就parent中没有处理过的key
+    }
+  }
+  function mergeField (key) {
+    const strat = strats[key] || defaultStrat
+    options[key] = strat(parent[key], child[key], vm, key) // 根据不同类型的options调用strats中不同的方法进行合并
+  }
+  return options
+}
+```
+
+- 优先递归处理 `mixins`
+- 先遍历合并 `parent` 中的 `key`，调用 `mergeField` 方法进行合并，然后保存在变量 `options`
+- 在遍历 `child`，合并补上 `parent` 中没有的 `key`，调用 `mergeField` 方法进行合并，并保存在变量 `options`
+- 通过 `mergeField` 函数进行了合并
+
+下面是关于 Vue 的几种类型的合并策略：
+
+- 替换型
+- 合并型
+- 队列型
+- 叠加型
+
+#### 替换型
+
+#### 合并型
+
+#### 队列型
+
+#### 叠加型
