@@ -1670,9 +1670,9 @@ PS：全局混入常用于插件的编写
 
 #### 注意事项
 
-当组件存在于 `mixin` 对象相同的选项的时候，进行递归合并的时候组件的选项会覆盖 `mixin` 的选项。
+当组件存在于 `mixin` 对象相同的选项的时候，进行递归合并的时候组件的选项会覆盖 `mixin` 的选项
 
-但是如果相同选项为生命周期钩子的时候，会合并成一个数组，先执行 `mixin` 的钩子，再执行组件的狗子。
+但是如果相同选项为生命周期钩子的时候，会合并成一个数组，先执行 `mixin` 的钩子，再执行组件的钩子
 
 ### 使用场景
 
@@ -1799,7 +1799,7 @@ export function mergeOptions (
 
 - 优先递归处理 `mixins`
 - 先遍历合并 `parent` 中的 `key`，调用 `mergeField` 方法进行合并，然后保存在变量 `options`
-- 在遍历 `child`，合并补上 `parent` 中没有的 `key`，调用 `mergeField` 方法进行合并，并保存在变量 `options`
+- 再遍历 `child`，合并补上 `parent` 中没有的 `key`，调用 `mergeField` 方法进行合并，并保存在变量 `options`
 - 通过 `mergeField` 函数进行了合并
 
 下面是关于 Vue 的几种类型的合并策略：
@@ -1811,8 +1811,161 @@ export function mergeOptions (
 
 #### 替换型
 
+替换型合并有 `props`、`methods`、`inject`、`computed`
+
+```js
+strats.props =
+strats.methods =
+strats.inject =
+strats.computed = function (
+  parentVal: ?Object,
+  childVal: ?Object,
+  vm?: Component,
+  key: string
+): ?Object {
+  if (!parentVal) return childVal // 如果parentVal没有值，直接返回childVal
+  const ret = Object.create(null) // 创建一个第三方对象 ret
+  extend(ret, parentVal) // extend方法实际是把parentVal的属性复制到ret中
+  if (childVal) extend(ret, childVal) // 把childVal的属性复制到ret中
+  return ret
+}
+strats.provide = mergeDataOrFn
+```
+
+如果 Mixin 和组件中存在同名的选项，组件中的选项会覆盖 Mixin 中的选项。
+
 #### 合并型
+
+合并型合并有 `data`
+
+```js
+strats.data = function(parentVal, childVal, vm) {
+  return mergeDataOrFn(
+    parentVal, childVal, vm
+  )
+};
+
+function mergeDataOrFn(parentVal, childVal, vm) {
+  return function mergedInstanceDataFn() {
+    var childData = childVal.call(vm, vm) // 执行data挂的函数得到对象
+    var parentData = parentVal.call(vm, vm)
+    if (childData) {
+      return mergeData(childData, parentData) // 将2个对象进行合并
+    } else {
+      return parentData // 如果没有childData 直接返回parentData
+    }
+  }
+}
+
+function mergeData(to, from) {
+  if (!from) return to
+  var key, toVal, fromVal;
+  var keys = Object.keys(from);
+  for (var i = 0; i < keys.length; i++) {
+    key = keys[i];
+    toVal = to[key];
+    fromVal = from[key];
+    // 如果不存在这个属性，就重新设置
+    if (!to.hasOwnProperty(key)) {
+      set(to, key, fromVal);
+    }
+    // 存在相同属性，合并对象
+    else if (typeof toVal =="object" && typeof fromVal =="object") {
+      mergeData(toVal, fromVal);
+    }
+  }
+  return to
+}
+```
+
+`mergeData` 函数遍历了要合并的 data 的所有属性，然后根据不同情况进行合并：
+
+- 当目标 data 对象不包含当前属性时，调用 `set` 方法进行合并（set方法其实就是一些合并重新赋值的方法）
+- 当目标 data 对象包含当前属性并且当前值为纯对象时，递归合并当前对象值，这样做是为了防止对象存在新增属性
 
 #### 队列型
 
+队列型合并有全部生命周期和 `watch`
+
+```js
+function mergeHook (
+  parentVal: ?Array<Function>,
+  childVal: ?Function | ?Array<Function>
+): ?Array<Function> {
+  return childVal
+    ? parentVal
+      ? parentVal.concat(childVal)
+      : Array.isArray(childVal)
+        ? childVal
+        : [childVal]
+    : parentVal
+}
+
+LIFECYCLE_HOOKS.forEach(hook => {
+  strats[hook] = mergeHook
+})
+
+// watch
+strats.watch = function (
+  parentVal,
+  childVal,
+  vm,
+  key
+) {
+  // work around Firefox's Object.prototype.watch...
+  if (parentVal === nativeWatch) { parentVal = undefined; }
+  if (childVal === nativeWatch) { childVal = undefined; }
+  /* istanbul ignore if */
+  if (!childVal) { return Object.create(parentVal || null) }
+  {
+    assertObjectType(key, childVal, vm);
+  }
+  if (!parentVal) { return childVal }
+  var ret = {};
+  extend(ret, parentVal);
+  for (var key$1 in childVal) {
+    var parent = ret[key$1];
+    var child = childVal[key$1];
+    if (parent && !Array.isArray(parent)) {
+      parent = [parent];
+    }
+    ret[key$1] = parent
+      ? parent.concat(child)
+      : Array.isArray(child) ? child : [child];
+  }
+  return ret
+};
+```
+
+生命周期钩子和 `watch` 被合并为一个数组，然后正序遍历一次执行
+
 #### 叠加型
+
+叠加型合并有 `component`、`directives`、`filters`
+
+```js
+strats.components=
+strats.directives=
+strats.filters = function mergeAssets(
+  parentVal, childVal, vm, key
+) {
+  var res = Object.create(parentVal || null);
+  if (childVal) {
+    for (var key in childVal) {
+      res[key] = childVal[key];
+    }
+  }
+  return res
+}
+```
+
+这些选项通过原型链进行层层叠加。如果 Mixin 和组件中都定义了同名的选项，组件中的选项会覆盖 Mixin 中的选项。
+
+#### 小结
+
+- 替换型策略有 `props`、`methods`、`inject`、`computed`，就是将新的同名参数替代旧的参数
+- 合并型策略是 `data`，通过 `set` 方法进行合并和重新赋值
+- 队列型策略有生命周期函数和 `watch`，原理是将函数存入一个数组，然后正序遍历依次执行
+- 叠加型有 `component`、`directives`、`filters`，通过原型链进行层层叠加
+
+##
