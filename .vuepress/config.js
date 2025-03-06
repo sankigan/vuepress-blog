@@ -118,5 +118,6 @@ export default defineUserConfig({
     //   },
     // },
   }),
+  pagePatterns: ['!**/template.md'],
   // debug: true,
 });
