@@ -48,7 +48,7 @@ categories:
 
 ## 理解下面这张图
 
-  ![](https://user-gold-cdn.xitu.io/2018/12/18/167c0772297e4ff8?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+  ![](https://s21.ax1x.com/2025/03/13/pEU4DfA.jpg)
 
 ## 你真的了解`instanceOf`操作符吗？
 
