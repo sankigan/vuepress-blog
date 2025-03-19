@@ -161,17 +161,17 @@ new Promise((resolve, reject) => {
 
 当使用 Promise 的 then 链式调用时，如果想在中间中断，不再调用后面的回调函数，可以在回调函数中返回一个 pendding 状态的 Promise 对象。
 
-## 实现 Promise
-
-[实现Promise(ES5版本)](https://github.com/sankigan/Front-End-Summary/blob/master/JavaScript/Promise-es5.js)
-
-[实现Promise(ES6版本)](https://github.com/sankigan/Front-End-Summary/blob/master/JavaScript/Promise-es6.js)
-
-## Promise 和 async/await 的区别
+### Promise 和 async/await 的区别
 
 -  在函数前有一个关键字`async`，`await`关键字只能在使用`async`定义的函数中使用。任何一个`async`函数都会隐式返回一个`promise`，并且`promise resolve`的值就是`return`返回的值
 - `Promise`中不能自定义使用`try/catch`进行错误捕获，但是在`async/await`中可以像处理同步代码处理错误
 - `Promise`代码完全都是`Promise`的API，操作本身的语义反而不容易看出来
 - `async/await`函数的实现最简洁，最符合语义，几乎没有不相关的代码
 - `async/await`函数就是`Generator`函数的语法糖
+
+## 实现 Promise
+
+[实现Promise(ES5版本)](https://github.com/sankigan/Front-End-Summary/blob/master/JavaScript/Promise-es5.js)
+
+[实现Promise(ES6版本)](https://github.com/sankigan/Front-End-Summary/blob/master/JavaScript/Promise-es6.js)
 
