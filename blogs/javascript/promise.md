@@ -137,8 +137,8 @@ new Promise((resolve, reject) => {
   console.log('onResolved1', value)
   throw 2
   // return 2
-  // return Promsie.resolve(2)
-  // return Promsie.reject(2)
+  // return Promise.resolve(2)
+  // return Promise.reject(2)
 }, reason => {
   console.log('onRejected1', reason)
 }).then(value => {
@@ -175,3 +175,5 @@ new Promise((resolve, reject) => {
 
 [实现Promise(ES6版本)](https://github.com/sankigan/Front-End-Summary/blob/master/JavaScript/Promise-es6.js)
 
+```js
+```
