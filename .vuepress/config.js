@@ -28,7 +28,7 @@ export default defineUserConfig({
     ],
     navbar: [
       { text: '首页', link: '/', icon: 'Home' },
-      { text: '文章', link: '/posts.html', icon: 'Blog' },
+      // { text: '文章', link: '/posts.html', icon: 'Blog' },
       {
         text: '分类',
         icon: 'Categories',
