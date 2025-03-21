@@ -176,4 +176,126 @@ new Promise((resolve, reject) => {
 [实现Promise(ES6版本)](https://github.com/sankigan/Front-End-Summary/blob/master/JavaScript/Promise-es6.js)
 
 ```js
+class MyPromise {
+  constructor(executor) {
+    this.promiseState = 'pending'; // 状态
+    this.promiseResult = null;  // 终值
+    this.onFulfilledQueue = []; // 保存成功的回调
+    this.onRejectedQueue = []; // 保存失败的回调
+
+    // 初始化 this 指向
+    this.resolve = this.resolve.bind(this);
+    this.reject = this.reject.bind(this);
+
+    try {
+      executor(this.resolve, this.reject);
+    } catch (err) {
+      this.reject(err);
+    }
+  }
+
+  resolve(value) {
+    if (this.promiseState !== 'pending') return;
+
+    this.promiseState = 'fulfilled';
+    this.promiseResult = value;
+
+    while(this.onFulfilledQueue.length) {
+      this.onFulfilledQueue.shift()(this.promiseResult);
+    }
+  }
+
+  reject(reason) {
+    if (this.promiseState !== 'pending') return;
+
+    this.promiseState = 'rejected';
+    this.promiseResult = reason;
+
+    while(this.onRejectedQueue.length) {
+      this.onRejectedQueue.shift()(this.promiseResult);
+    }
+  }
+
+  then(onFulfilled, onRejected) {
+    // 参数校验，确保一定是函数
+    onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value;
+    onRejected = typeof onRejected === 'function' ? onRejected : reason => { throw reason };
+
+    var thenPromise = new MyPromise((resolve, reject) => {
+      const resolvePromise = (cb) => {
+        try {
+          const result = cb(this.promiseResult);
+          if (result === thenPromise) {
+            throw new Error('不能返回自身')
+          }
+          if (result instanceof MyPromise) {
+            result.then(resolve, reject);
+          } else {
+            resolve(result);
+          }
+        } catch (err) {
+          reject(err);
+        }
+      };
+
+      if (this.promiseState === 'fulfilled') {
+        resolvePromise(onFulfilled);
+      } else if (this.promiseState === 'rejected') {
+        resolvePromise(onRejected);
+      } else if (this.promiseState === 'pending') {
+        // 如果状态为 pending，暂时保存两个回调
+        this.onFulfilledQueue.push(resolvePromise.bind(this, onFulfilled));
+        this.onRejectedQueue.push(resolvePromise.bind(this, onRejected));
+      }
+    });
+
+    return thenPromise;
+  }
+
+  static resolve(value) {
+    return new MyPromise((resolve, reject) => {
+      if (value instanceof MyPromise) {
+        value.then(resolve, reject);
+      } else {
+        resolve(value);
+      }
+    });
+  }
+
+  static reject(reason) {
+    return new MyPromise((resolve, reject) => {
+      reject(reason);
+    });
+  }
+
+  static all(promises) {
+    const result = [];
+
+    return new MyPromise((resolve, reject) => {
+      promises.forEach((promise, idx) => {
+        if (promise instanceof MyPromise) {
+          promise.then(value => {
+            result[idx] = value;
+            if (result.length === promises.length) resolve(result);
+          }, reason => reject(reason));
+        } else {
+          result[idx] = promise;
+          if (result.length === promises.length) resolve(result);
+        }
+      });
+    });
+  }
+
+  static race(promises) {
+    return new MyPromise((resolve, reject) => {
+      promises.forEach(promise => {
+        if (promise instanceof MyPromise) {
+          promise.then(resolve, reject);
+        } else {
+          resolve(promise);
+        }
+      });
+    });
+  }
+}
 ```
