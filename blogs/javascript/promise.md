@@ -175,6 +175,8 @@ new Promise((resolve, reject) => {
 
 [实现Promise(ES6版本)](https://github.com/sankigan/Front-End-Summary/blob/master/JavaScript/Promise-es6.js)
 
+[参考](https://juejin.cn/post/6994594642280857630)
+
 ```js
 class MyPromise {
   constructor(executor) {
