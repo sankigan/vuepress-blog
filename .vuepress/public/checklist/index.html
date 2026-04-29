@@ -1,0 +1,1701 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>清单</title>
+
+<!-- 得意黑 Smiley Sans · OFL 开源中文字体，本地内嵌 -->
+<link rel="preload" href="./fonts/SmileySans-Oblique.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  @font-face{
+    font-family: "Smiley Sans";
+    font-style: normal;
+    font-weight: 400 900;
+    /* block: 加载完成前先短暂留白，避免 fallback 字体闪一下再切换 */
+    font-display: block;
+    src: url("./fonts/SmileySans-Oblique.woff2") format("woff2");
+  }
+</style>
+
+<style>
+  /* =====================================================
+     Design tokens · Semi Design 风格（中性灰 + 单一品牌蓝）
+     ===================================================== */
+  :root{
+    /* 背景层 · Dan Koe 暖米黄 */
+    --bg-page:    #f4efe6;       /* 暖米黄 */
+    --bg-card:    #fffdf8;       /* 卡片纯净白偏暖 */
+    --bg-hover:   #ece5d6;
+    --bg-subtle:  #f9f5ec;
+
+    /* 文本层 · 暖灰阶（搭暖米黄） */
+    --text-0:     #1a1a1a;       /* 标题主色（近黑） */
+    --text-1:     #2c2c2c;       /* 正文 */
+    --text-2:     #4a4640;       /* 次要 */
+    --text-3:     #8a8278;       /* 辅助 */
+    --text-4:     #c2bcae;       /* 占位/禁用 */
+
+    /* 边框 · 暖灰 */
+    --border:     #d9d1c2;
+    --border-soft:#e6dfd0;
+    --border-strong:#c9c0aa;
+
+    /* 品牌色 · Dan Koe 烧土橙 */
+    --brand:      #b4541e;
+    --brand-hover:#9c4717;
+    --brand-soft: #f4e6dc;
+    --brand-text: #8e3f12;
+
+    /* 装饰辅助色（保留但很少用） */
+    --gold:       #b89968;
+    --gold-soft:  #d6bf94;
+
+    /* 状态色 · 暖调 */
+    --success:    #5a8a6a;
+    --danger:     #c44a4a;
+    --danger-soft:#fbecec;
+
+    /* 阴影 · 暖灰 */
+    --shadow-sm:  0 1px 2px rgba(80,60,40,.04), 0 1px 3px rgba(80,60,40,.04);
+    --shadow-md:  0 4px 12px rgba(80,60,40,.06), 0 2px 4px rgba(80,60,40,.04);
+    --shadow-lg:  0 12px 32px rgba(80,60,40,.10), 0 4px 8px rgba(80,60,40,.05);
+
+    /* 圆角 */
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-xl: 18px;
+
+    /* 字体 · 得意黑 Smiley Sans */
+    --font-display: "Smiley Sans", "PingFang SC", "Helvetica Neue", system-ui, -apple-system, sans-serif;
+    --font-text:    "Smiley Sans", "PingFang SC", "Helvetica Neue", system-ui, -apple-system, sans-serif;
+    --font-mono:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  /* =====================================================
+     背景层 · 克制留白派（Linear / Vercel 风）
+     - body：暖米黄底 + 双向极淡光晕 + 极淡纸纹噪点（feTurbulence）
+     - body::before：顶部横向极淡等高线 SVG，4 实线 + 1 虚线
+       上下左右都用 mask 渐隐，到 hero 区结束自然消失
+     - 整体非常克制：远看几乎纯米黄，凑近才看到细节
+     ===================================================== */
+
+  body{
+    font-family: var(--font-text);
+    background-color: var(--bg-page);
+    color: var(--text-1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* 得意黑字身较窄，需更松的字间距与行高 */
+    letter-spacing: 0.04em;
+    line-height: 1.75;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(180,84,30,.05), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(0,0,0,.035), transparent 60%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.36  0 0 0 0 0.24  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-size: auto, auto, 240px 240px;
+    background-attachment: fixed, fixed, fixed;
+  }
+
+  /* 顶部横向等高线 —— 4 条实线 + 1 条虚线，稀疏不抢戏
+     - 上下左右都用 mask 渐隐，避免与下方 stats 卡冲突 */
+  body::before{
+    content: "";
+    position: absolute;
+    top: 20px; left: 0;
+    width: 100%;
+    height: 200px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.5;
+    background-repeat: no-repeat;
+    background-position: left top;
+    background-size: 100% 100%;
+    -webkit-mask-image:
+      linear-gradient(to right,  transparent 0%, #000 18%, #000 60%, transparent 100%),
+      linear-gradient(to bottom, #000 0%, #000 60%, transparent 95%);
+    -webkit-mask-composite: source-in;
+            mask-image:
+      linear-gradient(to right,  transparent 0%, #000 18%, #000 60%, transparent 100%),
+      linear-gradient(to bottom, #000 0%, #000 60%, transparent 95%);
+            mask-composite: intersect;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none' fill='none' stroke='%23b4541e' stroke-width='0.8' stroke-linecap='round'><g stroke-opacity='0.55'><path d='M0 50 C 240 30, 480 70, 720 50 S 1200 30, 1440 50'/><path d='M0 90 C 240 70, 480 110, 720 90 S 1200 70, 1440 90'/><path d='M0 130 C 240 110, 480 150, 720 130 S 1200 110, 1440 130'/><path d='M0 170 C 240 150, 480 190, 720 170 S 1200 150, 1440 170'/></g><g stroke-opacity='0.3' stroke-dasharray='2 4'><path d='M0 110 C 240 90, 480 130, 720 110 S 1200 90, 1440 110'/></g></svg>");
+  }
+
+  /* 移动端：等高线再收紧一点 */
+  @media (max-width: 560px){
+    body::before{ height: 140px; opacity: 0.4; }
+  }
+
+  /* 尊重用户的"减少动效"偏好 —— 当前装饰静态，预留扩展位 */
+  @media (prefers-reduced-motion: reduce){
+    body::before{ transition: none; animation: none; }
+  }
+
+  .wrap{
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+
+  /* =====================================================
+     Header
+     ===================================================== */
+  header.hero{
+    margin-bottom: 32px;
+  }
+  .eyebrow{
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 12px;
+    /* 磨砂玻璃 pill：用更强的 blur + 几乎透明的暖底色，
+       让底下的波浪/纸纹"晕染"穿过来而不是被截断。
+       极淡内/外阴影模拟玻璃厚度，去掉硬描边。 */
+    background: rgba(255, 253, 248, 0.35);
+    color: var(--brand-text);
+    border: none;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .02em;
+    margin-bottom: 18px;
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(180, 84, 30, 0.08),
+      0 1px 2px rgba(80, 60, 40, 0.05);
+  }
+  .eyebrow .dot{
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--brand);
+    box-shadow: 0 0 0 3px rgba(177,74,92,.18);
+  }
+  h1.title{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(36px, 5.4vw, 52px);
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+    color: var(--text-0);
+    margin: 0 0 14px;
+    outline: none;
+    border-radius: 6px;
+  }
+  h1.title .em{ color: var(--brand); }
+  /* 可编辑标题/导语的视觉反馈：focus 时浅橙底，空内容时显示 placeholder */
+  h1.title:focus,
+  .lede:focus{
+    background: var(--brand-soft);
+    box-shadow: 0 0 0 6px var(--brand-soft);
+  }
+  h1.title:empty::before,
+  .lede:empty::before{
+    content: attr(data-placeholder);
+    color: var(--text-4);
+    font-style: italic;
+    pointer-events: none;
+  }
+  /* eyebrow 里的可编辑文字段：去掉默认 outline，focus 加浅橙描边 */
+  #metaEyebrow{
+    outline: none;
+    border-radius: 4px;
+    min-width: 4ch;
+  }
+  #metaEyebrow:focus{
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 2px rgba(180, 84, 30, 0.25);
+  }
+  #metaEyebrow:empty::before{
+    content: attr(data-placeholder);
+    color: var(--text-4);
+    font-style: italic;
+    pointer-events: none;
+  }
+  .lede{
+    font-size: 15px;
+    line-height: 1.85;
+    letter-spacing: 0.05em;
+    color: var(--text-2);
+    max-width: 56ch;
+    margin: 0;
+    outline: none;
+    border-radius: 6px;
+  }
+
+  /* =====================================================
+     Stats / Progress card
+     ===================================================== */
+  .stats{
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: center;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 18px 22px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stats .left{ display:flex; align-items:center; gap: 14px; flex-wrap: wrap; }
+  .stats .date{
+    font-size: 13px;
+    color: var(--text-3);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .stats .date::before{
+    content: "";
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 3px rgba(0,185,107,.15);
+  }
+  .stats .progress-wrap{
+    display: flex; align-items: center; gap: 12px;
+    min-width: 260px;
+  }
+  .progress-bar{
+    flex: 1;
+    height: 6px;
+    background: var(--bg-hover);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-bar > span{
+    display: block; height: 100%;
+    background: linear-gradient(90deg, var(--brand) 0%, #d28796 100%);
+    border-radius: 999px;
+    transition: width .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .progress-text{
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-1);
+    font-variant-numeric: tabular-nums;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  /* =====================================================
+     Section card
+     ===================================================== */
+  .section{
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 26px 26px 18px;
+    margin-bottom: 36px;       /* L3：分类之间宽间距 */
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow .25s ease, border-color .25s ease;
+    position: relative;
+  }
+  .section:hover{
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
+  }
+
+  .section-head{
+    display: flex; align-items: center; gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 4px;
+  }
+  .section-num{
+    flex: none;
+    width: 28px; height: 28px;
+    display: inline-grid; place-items: center;
+    border-radius: var(--r-sm);
+    background: var(--brand-soft);
+    color: var(--brand-text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+  }
+  .section-title{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: 0.04em;
+    color: var(--text-0);
+    margin: 0;
+    flex: 1;
+    outline: none;
+    border-radius: 4px;
+  }
+  .section-title:focus{
+    background: var(--brand-soft);
+    padding: 2px 8px;
+    margin: -2px -8px;
+  }
+  .section-actions{
+    display: flex; gap: 4px; opacity: 0;
+    transition: opacity .2s;
+  }
+  .section:hover .section-actions,
+  .section:focus-within .section-actions{ opacity: 1; }
+
+  /* =====================================================
+     Group
+     ===================================================== */
+  .group{ padding: 0; }
+  .group + .group{ margin-top: 14px; }   /* L2：子分类之间略放宽 */
+  .group-label{
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    /* 用 margin 控制外部空隙、padding 仅控制色块大小，避免 focus 色块顶部留白 */
+    margin: 18px 0 6px;
+    padding: 3px 6px;
+    outline: none;
+    border-radius: 4px;
+  }
+  /* 第一个 group 的标签去掉顶部多余空隙（紧贴 section-head 下方） */
+  .section .group:first-of-type .group-label{ margin-top: 10px; }
+  .group-label:focus{
+    background: var(--brand-soft);
+    color: var(--brand-text);
+  }
+
+  /* =====================================================
+     View switcher · 视图列数切换器
+     ===================================================== */
+  .view-switcher{
+    display: inline-flex;
+    background: var(--bg-hover);
+    border-radius: var(--r-sm);
+    padding: 2px;
+    gap: 1px;
+    margin-left: 8px;
+  }
+  .vs-btn{
+    appearance: none; border: none;
+    background: transparent;
+    color: var(--text-3);
+    width: 28px; height: 24px;
+    display: inline-grid; place-items: center;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .18s ease;
+  }
+  .vs-btn svg{ fill: currentColor; }
+  .vs-btn:hover{ color: var(--text-1); }
+  .vs-btn.active{
+    background: var(--bg-card);
+    color: var(--brand);
+    box-shadow: 0 1px 2px rgba(80,40,40,.08);
+  }
+
+  /* =====================================================
+     Items · 列布局
+     ===================================================== */
+  ul.items{
+    list-style: none; padding: 0; margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: 18px;
+    row-gap: 1px;
+  }
+  /* data-view 控制列数 */
+  [data-view="2"] ul.items{
+    grid-template-columns: 1fr 1fr;
+  }
+  [data-view="auto"] ul.items{
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+  /* 多列时去掉 item + item 的 1px margin（grid gap 接管） */
+  [data-view="2"] .item + .item,
+  [data-view="auto"] .item + .item{ margin-top: 0; }
+
+  /* 移动端强制单列 */
+  @media (max-width: 560px){
+    [data-view="2"] ul.items,
+    [data-view="auto"] ul.items{
+      grid-template-columns: 1fr;
+    }
+  }
+  .item{
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 10px;
+    margin: 0 -10px;
+    border-radius: var(--r-sm);
+    transition: background .18s ease;
+    position: relative;
+    min-width: 0;                /* 关键：允许 grid item 内部缩到比内容更小，配合 ellipsis */
+  }
+  .item + .item{ margin-top: 1px; }
+  .item:hover{ background: var(--bg-hover); }
+
+  /* Checkbox · Semi 风格的方角圆角矩形 */
+  .check{
+    appearance: none; -webkit-appearance: none;
+    width: 18px; height: 18px; flex: none;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 5px;
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all .18s cubic-bezier(.2,.8,.2,1);
+    display: inline-grid; place-items: center;
+    position: relative;
+  }
+  .check:hover{
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+  .check::after{
+    content: "";
+    width: 9px; height: 5px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) scale(.4) translate(2px, -2px);
+    opacity: 0;
+    transition: opacity .18s ease, transform .18s ease;
+  }
+  .check:checked{
+    background: var(--brand);
+    border-color: var(--brand);
+  }
+  .check:checked::after{
+    opacity: 1;
+    transform: rotate(-45deg) scale(1) translate(1px, -1px);
+  }
+  .check:active{ transform: scale(.92); }
+
+  .item-text{
+    flex: 1;
+    min-width: 0;             /* 配合 ellipsis */
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: 0.05em;
+    color: var(--text-1);
+    outline: none;
+    border-radius: 4px;
+    padding: 2px 0;
+    /* 默认：单行省略，避免多列下宽度撑爆 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* hover / focus / 编辑时：恢复多行换行展示完整文本 */
+  .item:hover .item-text,
+  .item-text:focus{
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-word;
+  }
+  /* 单列模式下默认就允许换行（不做省略） */
+  [data-view="1"] .item-text{
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-word;
+  }
+  .item-text:focus{
+    background: var(--brand-soft);
+    padding: 2px 8px;
+    margin: 0 -8px;
+  }
+  .item.done .item-text{
+    color: var(--text-3);
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: var(--text-4);
+  }
+
+  .item-actions{
+    display: flex; gap: 2px;
+    flex: none;
+    opacity: 0;
+    transition: opacity .15s ease;
+  }
+  .item:hover .item-actions,
+  .item:focus-within .item-actions{ opacity: 1; }
+
+  /* =====================================================
+     Buttons
+     ===================================================== */
+  .icon-btn{
+    appearance: none; border: none; background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: var(--r-sm);
+    font-family: var(--font-text);
+    font-size: 12px;
+    font-weight: 500;
+    transition: all .15s ease;
+  }
+  .icon-btn:hover{ color: var(--brand); background: var(--brand-soft); }
+  .icon-btn.danger:hover{ color: var(--danger); background: var(--danger-soft); }
+
+  .empty-state{
+    text-align: center;
+    padding: 56px 24px 48px;
+  }
+  .empty-icon{ font-size: 44px; line-height: 1; margin-bottom: 14px; }
+  .empty-title{
+    font-family: var(--font-display, var(--font-text));
+    font-size: 22px;
+    margin: 0 0 8px;
+    color: var(--text-1);
+    font-weight: 600;
+  }
+  .empty-desc{
+    margin: 0 0 24px;
+    color: var(--text-2);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .empty-desc code{
+    background: var(--brand-soft);
+    color: var(--brand);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+  .empty-actions{
+    display: inline-flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .empty-actions .btn{ padding: 10px 18px; font-size: 14px; }
+
+  .btn{
+    appearance: none;
+    border: 1px solid transparent;
+    padding: 8px 16px;
+    border-radius: var(--r-md);
+    font-family: var(--font-text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .18s cubic-bezier(.2,.8,.2,1);
+    display: inline-flex; align-items: center; gap: 6px;
+    line-height: 1;
+  }
+  .btn-primary{
+    background: var(--brand); color: #fff;
+  }
+  .btn-primary:hover{
+    background: var(--brand-hover);
+    box-shadow: 0 4px 12px rgba(177,74,92,.25);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active{ transform: translateY(0); }
+  .btn-ghost{
+    background: var(--bg-card);
+    color: var(--text-1);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover{
+    border-color: var(--brand);
+    color: var(--brand);
+    background: var(--brand-soft);
+  }
+
+  /* =====================================================
+     Add item row
+     ===================================================== */
+  .add-item-row{
+    display: flex; gap: 10px; align-items: center;
+    padding: 12px 10px 6px;
+    margin: 14px -10px 0;
+    border-top: 1px dashed var(--border-soft);
+  }
+  .add-group-select{
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    border-radius: var(--r-sm);
+    padding: 7px 28px 7px 10px;
+    font-family: var(--font-text);
+    font-size: 12px;
+    color: var(--text-2);
+    cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-3) 50%),
+                      linear-gradient(135deg, var(--text-3) 50%, transparent 50%);
+    background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
+    background-size: 4px 4px;
+    background-repeat: no-repeat;
+    transition: border-color .15s;
+  }
+  .add-group-select:hover{ border-color: var(--brand); }
+  .add-group-select:focus{ outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(177,74,92,.15); }
+
+  .add-item-row input{
+    flex: 1;
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    border-radius: var(--r-sm);
+    padding: 8px 12px;
+    font-family: var(--font-text);
+    font-size: 14px;
+    color: var(--text-1);
+    transition: all .15s;
+  }
+  .add-item-row input::placeholder{ color: var(--text-4); }
+  .add-item-row input:focus{
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(177,74,92,.15);
+  }
+
+  /* =====================================================
+     New section card
+     ===================================================== */
+  .new-section{
+    margin-top: 28px;
+    padding: 22px 24px;
+    background: var(--bg-card);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--r-lg);
+    transition: border-color .2s, background .2s;
+  }
+  .new-section:hover{
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+  .new-section h3{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-0);
+    margin: 0 0 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .new-section h3 .plus-badge{
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--brand);
+    color: #fff;
+    border-radius: var(--r-sm);
+    flex-shrink: 0;
+  }
+  .new-section h3 .plus-badge svg{ display: block; }
+  .new-section .row{
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .new-section input[type=text]{
+    flex: 1; min-width: 220px;
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    border-radius: var(--r-sm);
+    padding: 9px 12px;
+    font-family: var(--font-text);
+    font-size: 14px;
+    color: var(--text-1);
+    transition: all .15s;
+  }
+  .new-section input[type=text]::placeholder{ color: var(--text-4); }
+  .new-section input[type=text]:focus{
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(177,74,92,.15);
+  }
+
+  /* =====================================================
+     Footer toolbar
+     ===================================================== */
+  footer.tools{
+    margin-top: 36px;
+    padding: 16px 4px;
+    display: flex; gap: 12px; flex-wrap: wrap;
+    align-items: center;
+    color: var(--text-3);
+    font-size: 12px;
+  }
+  footer.tools .right{ margin-left: auto; display: flex; gap: 4px; }
+  .text-link{
+    color: var(--text-2);
+    cursor: pointer;
+    border: none; background: none;
+    padding: 6px 10px;
+    border-radius: var(--r-sm);
+    font-family: var(--font-text);
+    font-size: 12px;
+    font-weight: 500;
+    transition: all .15s;
+  }
+  .text-link:hover{ color: var(--brand); background: var(--brand-soft); }
+
+  /* Empty state */
+  .empty{
+    color: var(--text-3);
+    font-size: 13px;
+    padding: 10px 0;
+    text-align: center;
+    background: var(--bg-subtle);
+    border-radius: var(--r-md);
+    margin: 4px 0;
+  }
+
+  /* 入场动画 */
+  @keyframes fadeUp{
+    from{opacity:0; transform: translateY(6px)}
+    to{opacity:1; transform: none}
+  }
+  .item, .group, .section{ animation: fadeUp .35s ease both; }
+
+  /* 内容层置于背景之上 */
+  main.wrap{ position: relative; z-index: 3; }
+
+  /* 响应式 */
+  @media (max-width: 560px){
+    .wrap{ padding: 36px 16px 100px; }
+    .section{ padding: 18px 16px 10px; border-radius: var(--r-md); }
+    .stats{ padding: 14px 16px; grid-template-columns: 1fr; }
+    .stats .progress-wrap{ min-width: 0; width: 100%; }
+    .add-item-row{ flex-wrap: wrap; }
+    .add-item-row input{ width: 100%; }
+    .new-section{ padding: 18px 16px; }
+    .new-section input[type=text]{ width: 100%; min-width: 0; }
+  }
+
+  /* =====================================================
+     Dialog · 替代浏览器原生 alert/confirm/prompt
+     - 使用原生 <dialog>，自带焦点陷阱、ESC 关闭、::backdrop
+     - 与卡片风格完全统一：暖白底 + 暖灰描边 + 大圆角 + 暖阴影
+     - danger 操作：按钮使用 --danger 色，强提示破坏性
+     ===================================================== */
+  .ui-dialog{
+    /* 重置原生 dialog 的默认样式 */
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    max-width: min(420px, calc(100vw - 32px));
+    width: 100%;
+    /* 避免在 Safari 下被默认样式撑开 */
+    overflow: visible;
+  }
+  .ui-dialog::backdrop{
+    background: rgba(40, 30, 20, 0.32);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .ui-dialog[open]{
+    animation: dialogIn .22s cubic-bezier(.2,.8,.2,1);
+  }
+  .ui-dialog[open]::backdrop{
+    animation: backdropIn .22s ease;
+  }
+  @keyframes dialogIn{
+    from{ opacity: 0; transform: translateY(8px) scale(.98); }
+    to  { opacity: 1; transform: none; }
+  }
+  @keyframes backdropIn{
+    from{ opacity: 0; }
+    to  { opacity: 1; }
+  }
+  .ui-dialog-card{
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 22px 24px 18px;
+    font-family: var(--font-text);
+  }
+  .ui-dialog-title{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: 0.04em;
+    color: var(--text-0);
+    margin: 0 0 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ui-dialog-title .badge{
+    width: 22px; height: 22px;
+    flex: none;
+    display: inline-grid; place-items: center;
+    border-radius: var(--r-sm);
+    background: var(--brand-soft);
+    color: var(--brand-text);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .ui-dialog[data-tone="danger"] .ui-dialog-title .badge{
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+  .ui-dialog-body{
+    color: var(--text-2);
+    font-size: 14px;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+    margin: 0 0 16px;
+    white-space: pre-wrap;       /* 保留 \n，兼容旧 alert 多行字符串 */
+    word-break: break-word;
+  }
+  .ui-dialog-input{
+    display: block;
+    width: 100%;
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    border-radius: var(--r-sm);
+    padding: 9px 12px;
+    font-family: var(--font-text);
+    font-size: 14px;
+    color: var(--text-1);
+    margin: 0 0 16px;
+    transition: all .15s;
+  }
+  .ui-dialog-input:focus{
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(180, 84, 30, 0.15);
+  }
+  .ui-dialog-actions{
+    display: flex; gap: 8px; justify-content: flex-end;
+  }
+  .ui-dialog-actions .btn{ padding: 8px 18px; }
+  /* danger 主按钮：用警示色替代品牌色 */
+  .ui-dialog .btn-danger{
+    background: var(--danger);
+    color: #fff;
+    border-color: transparent;
+  }
+  .ui-dialog .btn-danger:hover{
+    background: #a83d3d;
+    box-shadow: 0 4px 12px rgba(196, 74, 74, .25);
+    transform: translateY(-1px);
+  }
+  .ui-dialog .btn-danger:active{ transform: translateY(0); }
+
+  @media (max-width: 560px){
+    .ui-dialog-card{ padding: 18px 18px 14px; }
+    .ui-dialog-actions{ flex-wrap: wrap; }
+    .ui-dialog-actions .btn{ flex: 1; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<main class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow"
+      ><span class="dot" aria-hidden="true"></span
+      ><span id="metaEyebrow"
+             contenteditable="true" spellcheck="false"
+             data-placeholder="副标语…"
+             title="点击编辑顶部小标语"></span></span>
+    <h1 class="title" id="metaTitle"
+        contenteditable="true" spellcheck="false"
+        data-placeholder="标题（用 · 分隔高亮部分）"
+        title="点击编辑标题，用 · 分隔尾部高亮词"></h1>
+    <p class="lede" id="metaLede"
+       contenteditable="true" spellcheck="false"
+       data-placeholder="点击编辑导语…"
+       title="点击编辑导语"></p>
+  </header>
+
+  <div class="stats">
+    <div class="left">
+      <span class="date" id="dateText"></span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><span id="progressBar" style="width:0%"></span></div>
+      <span class="progress-text" id="progressText">0 / 0</span>
+      <div class="view-switcher" role="radiogroup" aria-label="视图列数">
+        <button class="vs-btn" data-view="1" title="单列" role="radio" aria-checked="true">
+          <svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="3" width="10" height="2.5" rx=".6"/><rect x="3" y="6.7" width="10" height="2.5" rx=".6"/><rect x="3" y="10.5" width="10" height="2.5" rx=".6"/></svg>
+        </button>
+        <button class="vs-btn" data-view="2" title="双列" role="radio" aria-checked="false">
+          <svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="3" width="5" height="2.5" rx=".6"/><rect x="9" y="3" width="5" height="2.5" rx=".6"/><rect x="2" y="6.7" width="5" height="2.5" rx=".6"/><rect x="9" y="6.7" width="5" height="2.5" rx=".6"/><rect x="2" y="10.5" width="5" height="2.5" rx=".6"/><rect x="9" y="10.5" width="5" height="2.5" rx=".6"/></svg>
+        </button>
+        <button class="vs-btn" data-view="auto" title="自适应（按宽度）" role="radio" aria-checked="false">
+          <svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="3" width="3" height="2.5" rx=".6"/><rect x="6.5" y="3" width="3" height="2.5" rx=".6"/><rect x="11" y="3" width="3" height="2.5" rx=".6"/><rect x="2" y="6.7" width="3" height="2.5" rx=".6"/><rect x="6.5" y="6.7" width="3" height="2.5" rx=".6"/><rect x="11" y="6.7" width="3" height="2.5" rx=".6"/><rect x="2" y="10.5" width="3" height="2.5" rx=".6"/><rect x="6.5" y="10.5" width="3" height="2.5" rx=".6"/><rect x="11" y="10.5" width="3" height="2.5" rx=".6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="board"></div>
+
+  <section class="section empty-state" id="emptyState" hidden>
+    <div class="empty-icon">📦</div>
+    <h2 class="empty-title">还没有任何清单</h2>
+    <p class="empty-desc">从一份 <code>data.json</code> 导入数据，或者直接新建分类从零开始。</p>
+    <div class="empty-actions">
+      <button class="btn btn-primary" id="emptyImportBtn">📥 导入 data.json</button>
+      <button class="btn" id="emptyStartBlankBtn">✏️ 直接新建</button>
+    </div>
+  </section>
+
+  <section class="new-section">
+    <h3><span class="plus-badge" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1.5v9M1.5 6h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>新增一个分类</h3>
+    <div class="row">
+      <input type="text" id="newSectionTitle" placeholder="例如：日常 / 数码 / 衣物" />
+      <button class="btn btn-primary" id="addSectionBtn">添加分类</button>
+    </div>
+  </section>
+
+  <footer class="tools">
+    <span>本地保存 · 数据存于你的浏览器</span>
+    <div class="right">
+      <button class="text-link" id="clearDoneBtn">清除已完成</button>
+      <button class="text-link" id="exportJsonBtn">导出 JSON</button>
+      <button class="text-link" id="importJsonBtn">导入 JSON</button>
+      <button class="text-link" id="clearAllBtn">清空全部</button>
+      <input type="file" id="importJsonInput" accept="application/json,.json" hidden />
+    </div>
+  </footer>
+</main>
+
+<script>
+/* ============================================================
+   Checklist · Vanilla JS, localStorage, no build step
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   ui · 替代浏览器原生 alert/confirm/prompt 的优雅版
+   - 底层用原生 <dialog>，自带焦点陷阱、ESC 关闭、::backdrop
+   - 全部 Promise 化：alert→Promise<void>，confirm→Promise<boolean>，
+     prompt→Promise<string|null>（取消返回 null，与原生一致）
+   - tone: "default" | "danger"（破坏性操作的强提示）
+   ------------------------------------------------------------ */
+const ui = (() => {
+  /* 渲染并打开一个 dialog，返回 Promise<结果>。
+     opts: { title, message, tone, kind, okText, cancelText, defaultValue, placeholder } */
+  function open(opts){
+    const {
+      title = "",
+      message = "",
+      tone = "default",         // "default" | "danger"
+      kind = "alert",           // "alert" | "confirm" | "prompt"
+      okText,
+      cancelText = "取消",
+      defaultValue = "",
+      placeholder = "",
+    } = opts;
+
+    const dlg = document.createElement("dialog");
+    dlg.className = "ui-dialog";
+    dlg.dataset.tone = tone;
+
+    /* 三种类型的默认确认按钮文案 */
+    const defaultOk = kind === "confirm"
+      ? (tone === "danger" ? "确认删除" : "确定")
+      : kind === "prompt" ? "确定" : "好";
+    const okLabel = okText || defaultOk;
+
+    /* 标题前的 badge：danger 用 ! ，其余用 i */
+    const badgeChar = tone === "danger" ? "!" : "i";
+
+    /* 主按钮 class：danger 用红、其余用品牌色 */
+    const okClass = tone === "danger" ? "btn-danger" : "btn-primary";
+
+    const card = document.createElement("div");
+    card.className = "ui-dialog-card";
+
+    const titleEl = document.createElement("h3");
+    titleEl.className = "ui-dialog-title";
+    if(title){
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.setAttribute("aria-hidden", "true");
+      badge.textContent = badgeChar;
+      titleEl.appendChild(badge);
+      titleEl.appendChild(document.createTextNode(title));
+      card.appendChild(titleEl);
+    }
+
+    if(message){
+      const body = document.createElement("p");
+      body.className = "ui-dialog-body";
+      body.textContent = message;          // textContent 杜绝 XSS，CSS white-space: pre-wrap 保留换行
+      card.appendChild(body);
+    }
+
+    let input = null;
+    if(kind === "prompt"){
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "ui-dialog-input";
+      input.value = defaultValue;
+      input.placeholder = placeholder;
+      card.appendChild(input);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "ui-dialog-actions";
+
+    let cancelBtn = null;
+    if(kind !== "alert"){
+      cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.className = "btn btn-ghost";
+      cancelBtn.textContent = cancelText;
+      actions.appendChild(cancelBtn);
+    }
+
+    const okBtn = document.createElement("button");
+    okBtn.type = "button";
+    okBtn.className = `btn ${okClass}`;
+    okBtn.textContent = okLabel;
+    actions.appendChild(okBtn);
+
+    card.appendChild(actions);
+    dlg.appendChild(card);
+    document.body.appendChild(dlg);
+
+    return new Promise(resolve => {
+      let settled = false;
+      function finish(value){
+        if(settled) return;
+        settled = true;
+        try{ dlg.close(); }catch(e){}
+        dlg.remove();
+        resolve(value);
+      }
+
+      okBtn.addEventListener("click", () => {
+        if(kind === "alert")        finish(undefined);
+        else if(kind === "confirm") finish(true);
+        else                        finish(input.value);
+      });
+
+      if(cancelBtn){
+        cancelBtn.addEventListener("click", () => {
+          finish(kind === "confirm" ? false : null);
+        });
+      }
+
+      /* ESC / 点击 backdrop / 浏览器关闭 dialog —— 都视为取消 */
+      dlg.addEventListener("cancel", e => {
+        e.preventDefault();
+        finish(kind === "alert" ? undefined : (kind === "confirm" ? false : null));
+      });
+      dlg.addEventListener("click", e => {
+        // 点击到 dialog 元素本身（即 backdrop 区）才算关闭，点到内部 card 不关
+        if(e.target === dlg) finish(kind === "alert" ? undefined : (kind === "confirm" ? false : null));
+      });
+
+      /* prompt 输入框里的 Enter = 确认 */
+      if(input){
+        input.addEventListener("keydown", e => {
+          if(e.key === "Enter"){ e.preventDefault(); okBtn.click(); }
+        });
+      }
+
+      dlg.showModal();
+      // 焦点：prompt 给输入框，其余给主按钮
+      requestAnimationFrame(() => {
+        if(input){ input.focus(); input.select(); }
+        else okBtn.focus();
+      });
+    });
+  }
+
+  return {
+    alert(message, { title = "提示", okText, tone = "default" } = {}){
+      return open({ kind: "alert", title, message, okText, tone });
+    },
+    confirm(message, { title = "请确认", okText, cancelText, tone = "default" } = {}){
+      return open({ kind: "confirm", title, message, okText, cancelText, tone });
+    },
+    prompt(message, defaultValue = "", { title = "请输入", okText, cancelText, placeholder } = {}){
+      return open({ kind: "prompt", title, message, defaultValue, okText, cancelText, placeholder });
+    },
+  };
+})();
+
+/* localStorage key：v3 —— 纯净版，HTML 不再硬编码任何业务数据 */
+const STORAGE_KEY = "checklist_v3";
+
+/* 空清单结构：HTML 完全不携带业务数据。
+   想要带初始内容，请通过页面上的"导入 JSON"功能加载 data.json。
+   meta 字段说明：
+     eyebrow         顶部小标语（pill 里的英文/口号）
+     title           主标题前缀（首次进入留空，引导用户输入）
+     titleHighlight  主标题尾词（可选）—— 会用品牌色 .em 高亮
+     lede            首屏导语（保留默认文案作为引导，可被覆盖）
+*/
+const EMPTY_DATA = {
+  meta: {
+    eyebrow: "Checklist",
+    title: "",
+    titleHighlight: "",
+    lede: "把要带的东西安静地写下来，再一件件勾掉。\n愿这趟旅程，从容、丰盛、被祝福。"
+  },
+  sections: []
+};
+
+/* ---------------- State ---------------- */
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+function migrate(raw){
+  /* 把任意输入规整成合法 state，缺字段补默认、有错的丢弃。*/
+  const data = JSON.parse(JSON.stringify(raw || {}));
+  if(!data || typeof data !== "object") throw new Error("数据不是对象");
+  /* meta 兼容：老数据可能只有部分字段，这里补齐所有字段默认值。
+     默认 title/titleHighlight 留空，引导用户首次输入；
+     eyebrow / lede 给默认文案作为引导（json 可覆盖）。*/
+  data.meta = Object.assign(
+    {
+      eyebrow: "Checklist",
+      title: "",
+      titleHighlight: "",
+      lede: "把要带的东西安静地写下来，再一件件勾掉。\n愿这趟旅程，从容、丰盛、被祝福。"
+    },
+    data.meta || {}
+  );
+  if(!Array.isArray(data.sections)) data.sections = [];
+  data.sections.forEach(s => {
+    if(!s.id) s.id = uid();
+    if(typeof s.title !== "string") s.title = "未命名分类";
+    if(!Array.isArray(s.groups)) s.groups = [];
+    s.groups.forEach(g => {
+      if(!g.id) g.id = uid();
+      if(typeof g.label !== "string") g.label = "";
+      if(!Array.isArray(g.items)) g.items = [];
+      g.items = g.items.map(it => typeof it === "string"
+        ? { id: uid(), text: it, done: false }
+        : { id: it.id || uid(), text: String(it.text || ""), done: !!it.done });
+    });
+  });
+  return data;
+}
+
+function loadState(){
+  /* 应急侧门：URL 带 ?reset 时强制清空本地，回到首次进入空状态 */
+  if(new URLSearchParams(location.search).has("reset")){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    return migrate(EMPTY_DATA);
+  }
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return migrate(JSON.parse(raw));
+  }catch(e){ console.warn("loadState failed, fallback to empty", e); }
+  return migrate(EMPTY_DATA);
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let state = loadState();
+
+/* ---------------- Render ---------------- */
+const board = document.getElementById("board");
+const emptyState = document.getElementById("emptyState");
+const metaTitleEl = document.getElementById("metaTitle");
+const metaLedeEl = document.getElementById("metaLede");
+const metaEyebrowEl = document.getElementById("metaEyebrow");
+
+/* 把 state.meta 渲染到 H1 / 浏览器 <title> / 副标题 lede。
+   - 显示态：title 普通色 + titleHighlight 用 .em 高亮（品牌色）
+   - 编辑态：进入 focus 时合并成纯文本「title·titleHighlight」让用户直接改
+   - blur 后按 · 分隔符解析回 state.meta（最后一个 · 切分）
+   - lede 支持 \n / <br> 互转
+   - <title> 任何时候都同步（含编辑态实时更新）
+   - 用 textContent + 手建 span，杜绝 XSS */
+const TITLE_SEP = "·";
+
+/* 拼浏览器 tab 用的字符串：标题是啥就是啥 */
+function composeTabTitle(title, hl){
+  return (title + hl).trim() || "清单";
+}
+
+function applyMeta(){
+  const m = state.meta || {};
+  const eyebrow = String(m.eyebrow || "").trim();
+  const title = String(m.title || "").trim();
+  const hl = String(m.titleHighlight || "").trim();
+  const lede = String(m.lede || "").trim();
+
+  // 浏览器 tab —— 任何时候都同步，编辑态也不跳过
+  document.title = composeTabTitle(title, hl);
+
+  // 正在编辑 H1 / lede / eyebrow 时，跳过对应 DOM 重画
+  const editingEyebrow = document.activeElement === metaEyebrowEl;
+  const editingTitle   = document.activeElement === metaTitleEl;
+  const editingLede    = document.activeElement === metaLedeEl;
+
+  if(!editingEyebrow){
+    metaEyebrowEl.textContent = eyebrow;
+  }
+
+  if(!editingTitle){
+    metaTitleEl.textContent = title;
+    if(hl){
+      const span = document.createElement("span");
+      span.className = "em";
+      span.textContent = hl;
+      metaTitleEl.appendChild(span);
+    }
+  }
+
+  if(!editingLede){
+    metaLedeEl.innerHTML = "";
+    lede.split(/\n+/).forEach((line, i, arr) => {
+      metaLedeEl.appendChild(document.createTextNode(line));
+      if(i < arr.length - 1) metaLedeEl.appendChild(document.createElement("br"));
+    });
+  }
+}
+
+/* 进入编辑态：把高亮 span 拍平成「title·titleHighlight」纯文本 */
+function enterTitleEdit(){
+  const m = state.meta || {};
+  const title = String(m.title || "").trim();
+  const hl = String(m.titleHighlight || "").trim();
+  metaTitleEl.textContent = hl ? `${title}${TITLE_SEP}${hl}` : title;
+}
+
+/* 离开编辑态：解析纯文本，按"最后一个 ·"切分 */
+function commitTitleEdit(){
+  const raw = metaTitleEl.textContent.trim();
+  const idx = raw.lastIndexOf(TITLE_SEP);
+  let title, hl;
+  if(idx >= 0){
+    title = raw.slice(0, idx).trim();
+    hl    = raw.slice(idx + TITLE_SEP.length).trim();
+  } else {
+    title = raw;
+    hl = "";
+  }
+  state.meta.title = title;
+  state.meta.titleHighlight = hl;
+  applyMeta();
+  saveState();
+}
+
+/* 进入 lede 编辑态：把 <br> 拍平成 \n 让用户编辑纯文本 */
+function enterLedeEdit(){
+  const lede = String((state.meta || {}).lede || "");
+  metaLedeEl.textContent = lede;
+}
+
+/* 离开 lede 编辑态：换行符（无论 \n 还是浏览器插的 <br> 转出来的）回写 */
+function commitLedeEdit(){
+  // 拿 innerText 比 textContent 更准确——它会把 <br>/<div> 折成 \n
+  const raw = (metaLedeEl.innerText || metaLedeEl.textContent || "").trim();
+  state.meta.lede = raw;
+  applyMeta();
+  saveState();
+}
+
+// 绑定一次性的编辑事件
+metaTitleEl.addEventListener("focus", enterTitleEdit);
+metaTitleEl.addEventListener("blur",  commitTitleEdit);
+metaTitleEl.addEventListener("keydown", e => {
+  if(e.key === "Enter"){ e.preventDefault(); metaTitleEl.blur(); }
+});
+/* 编辑过程中实时同步浏览器 tab —— 按最后一个 · 切分当前 textContent */
+metaTitleEl.addEventListener("input", () => {
+  const raw = metaTitleEl.textContent;
+  const idx = raw.lastIndexOf(TITLE_SEP);
+  const t  = idx >= 0 ? raw.slice(0, idx) : raw;
+  const hl = idx >= 0 ? raw.slice(idx + TITLE_SEP.length) : "";
+  document.title = composeTabTitle(t.trim(), hl.trim());
+});
+
+metaLedeEl.addEventListener("focus", enterLedeEdit);
+metaLedeEl.addEventListener("blur",  commitLedeEdit);
+// lede 允许多行，Enter 不拦截；Cmd/Ctrl+Enter 直接收尾
+metaLedeEl.addEventListener("keydown", e => {
+  if(e.key === "Enter" && (e.metaKey || e.ctrlKey)){ e.preventDefault(); metaLedeEl.blur(); }
+});
+
+/* eyebrow 是单行小标语，逻辑最简：blur 时直接把纯文本写回 state.meta.eyebrow */
+metaEyebrowEl.addEventListener("blur", () => {
+  state.meta.eyebrow = metaEyebrowEl.textContent.trim();
+  applyMeta();
+  saveState();
+});
+metaEyebrowEl.addEventListener("keydown", e => {
+  if(e.key === "Enter"){ e.preventDefault(); metaEyebrowEl.blur(); }
+});
+
+function render(){
+  applyMeta();
+  board.innerHTML = "";
+  const isEmpty = !state.sections || state.sections.length === 0;
+  emptyState.hidden = !isEmpty;
+  if(!isEmpty){
+    state.sections.forEach((section, idx) => {
+      board.appendChild(renderSection(section, idx + 1));
+    });
+  }
+  updateProgress();
+  saveState();
+}
+
+function renderSection(section, num){
+  const el = document.createElement("section");
+  el.className = "section";
+  el.dataset.id = section.id;
+
+  const head = document.createElement("div");
+  head.className = "section-head";
+  head.innerHTML = `
+    <span class="section-num">${String(num).padStart(2,"0")}</span>
+    <h2 class="section-title" contenteditable="true" spellcheck="false"></h2>
+    <div class="section-actions">
+      <button class="icon-btn" data-act="add-group">+ 子分类</button>
+      <button class="icon-btn danger" data-act="del-section">删除</button>
+    <AZnv/div>
+  `;
+  head.querySelector(".section-title").textContent = section.title;
+  head.querySelector(".section-title").addEventListener("blur", e => {
+    section.title = e.target.textContent.trim() || "未命名";
+    saveState();
+  });
+  head.querySelector('[data-act="add-group"]').addEventListener("click", async () => {
+    const label = await ui.prompt("子分类名称（可留空）", "", {
+      title: "新增子分类",
+      placeholder: "例如：电子 / 洗护 / 文件",
+    });
+    if(label === null) return;       // 用户取消
+    section.groups.push({ id: uid(), label: label.trim(), items: [] });
+    render();
+  });
+  head.querySelector('[data-act="del-section"]').addEventListener("click", async () => {
+    const ok = await ui.confirm(`删除「${section.title}」整个分类？\n该分类下的所有事项都会一并移除。`, {
+      title: "删除分类",
+      tone: "danger",
+      okText: "删除",
+    });
+    if(!ok) return;
+    state.sections = state.sections.filter(s => s.id !== section.id);
+    render();
+  });
+  el.appendChild(head);
+
+  section.groups.forEach(group => el.appendChild(renderGroup(section, group)));
+
+  // Quick add row
+  const addRow = document.createElement("div");
+  addRow.className = "add-item-row";
+
+  const select = document.createElement("select");
+  select.className = "add-group-select";
+  if(section.groups.length === 0){
+    const opt = document.createElement("option");
+    opt.value = "__new__";
+    opt.textContent = "（先创建一个子分类）";
+    select.appendChild(opt);
+  } else {
+    section.groups.forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g.id;
+      opt.textContent = g.label ? `【${g.label}】` : "（无标签）";
+      select.appendChild(opt);
+    });
+  }
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = "新增一项，回车添加…";
+
+  const btn = document.createElement("button");
+  btn.className = "btn btn-primary";
+  btn.textContent = "添加";
+
+  function commit(){
+    const text = input.value.trim();
+    if(!text) return;
+    let group;
+    if(select.value === "__new__"){
+      group = { id: uid(), label: "", items: [] };
+      section.groups.push(group);
+    } else {
+      group = section.groups.find(g => g.id === select.value);
+    }
+    if(!group) return;
+    group.items.push({ id: uid(), text, done: false });
+    input.value = "";
+    render();
+    requestAnimationFrame(() => {
+      const next = board.querySelector(`section[data-id="${section.id}"] .add-item-row input`);
+      if(next) next.focus();
+    });
+  }
+  input.addEventListener("keydown", e => { if(e.key === "Enter") commit(); });
+  btn.addEventListener("click", commit);
+
+  addRow.appendChild(select);
+  addRow.appendChild(input);
+  addRow.appendChild(btn);
+  el.appendChild(addRow);
+
+  return el;
+}
+
+function renderGroup(section, group){
+  const wrap = document.createElement("div");
+  wrap.className = "group";
+  wrap.dataset.id = group.id;
+
+  if(group.label !== undefined){
+    const lbl = document.createElement("div");
+    lbl.className = "group-label";
+    lbl.contentEditable = "true";
+    lbl.spellcheck = false;
+    lbl.textContent = group.label || "（点击添加子分类名）";
+    lbl.addEventListener("focus", () => {
+      if(!group.label) lbl.textContent = "";
+    });
+    lbl.addEventListener("blur", e => {
+      group.label = e.target.textContent.trim();
+      if(!group.label) lbl.textContent = "（点击添加子分类名）";
+      saveState();
+    });
+    wrap.appendChild(lbl);
+  }
+
+  const ul = document.createElement("ul");
+  ul.className = "items";
+
+  if(group.items.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "还没有事项 — 在下方加一项吧";
+    wrap.appendChild(empty);
+  }
+
+  group.items.forEach(item => ul.appendChild(renderItem(section, group, item)));
+  wrap.appendChild(ul);
+
+  return wrap;
+}
+
+function renderItem(section, group, item){
+  const li = document.createElement("li");
+  li.className = "item" + (item.done ? " done" : "");
+  li.dataset.id = item.id;
+
+  const cb = document.createElement("input");
+  cb.type = "checkbox";
+  cb.className = "check";
+  cb.checked = !!item.done;
+  cb.addEventListener("change", () => {
+    item.done = cb.checked === true;   // 显式 boolean，不依赖 truthy
+    li.classList.toggle("done", item.done);
+    updateProgress();
+    saveState();
+    if(window.CHECKLIST_DEBUG) console.log("[toggle]", item.id, item.text, "→", item.done);
+  });
+
+  const text = document.createElement("div");
+  text.className = "item-text";
+  text.contentEditable = "true";
+  text.spellcheck = false;
+  text.textContent = item.text;
+  text.title = item.text;          // 系统 tooltip：多列省略时鼠标悬停看完整文本
+  text.addEventListener("blur", () => {
+    const v = text.textContent.trim();
+    if(!v){
+      group.items = group.items.filter(i => i.id !== item.id);
+      render();
+      return;
+    }
+    item.text = v;
+    text.title = v;                // 编辑后同步更新 tooltip
+    saveState();
+  });
+  text.addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); text.blur(); }
+  });
+
+  const actions = document.createElement("div");
+  actions.className = "item-actions";
+  const del = document.createElement("button");
+  del.className = "icon-btn danger";
+  del.textContent = "删除";
+  del.addEventListener("click", () => {
+    group.items = group.items.filter(i => i.id !== item.id);
+    render();
+  });
+  actions.appendChild(del);
+
+  li.appendChild(cb);
+  li.appendChild(text);
+  li.appendChild(actions);
+  return li;
+}
+
+/* ---------------- Progress ---------------- */
+function updateProgress(){
+  let total = 0, done = 0;
+  state.sections.forEach(s => s.groups.forEach(g => g.items.forEach(it => {
+    total++; if(it.done) done++;
+  })));
+  document.getElementById("progressText").textContent = `${done} / ${total}`;
+  const pct = total === 0 ? 0 : Math.round(done / total * 100);
+  document.getElementById("progressBar").style.width = pct + "%";
+}
+
+/* ---------------- Date string ---------------- */
+function setDate(){
+  const d = new Date();
+  const fmt = d.toLocaleDateString("zh-CN", { year:"numeric", month:"long", day:"numeric", weekday:"long" });
+  document.getElementById("dateText").textContent = fmt;
+}
+setDate();
+
+/* ---------------- Toolbar actions ---------------- */
+document.getElementById("addSectionBtn").addEventListener("click", () => {
+  const t = document.getElementById("newSectionTitle");
+  const title = t.value.trim();
+  if(!title) { t.focus(); return; }
+  state.sections.push({ id: uid(), title, groups: [{ id: uid(), label:"", items: [] }] });
+  t.value = "";
+  render();
+});
+document.getElementById("newSectionTitle").addEventListener("keydown", e => {
+  if(e.key === "Enter") document.getElementById("addSectionBtn").click();
+});
+
+document.getElementById("clearDoneBtn").addEventListener("click", async () => {
+  /* 先统计有多少已完成（防御：把任何 truthy 都算作完成，避免 done="true" 字符串等坏数据） */
+  let doneCount = 0, totalCount = 0;
+  state.sections.forEach(s => s.groups.forEach(g => g.items.forEach(it => {
+    totalCount++;
+    if(it.done === true || it.done === "true") doneCount++;
+  })));
+  console.log("[clearDone] before:", { totalCount, doneCount, snapshot: JSON.parse(JSON.stringify(state)) });
+
+  if(doneCount === 0){
+    await ui.alert(`当前没有已完成的事项可清除（共 ${totalCount} 项）。`, {
+      title: "无可清除",
+    });
+    return;
+  }
+  const ok = await ui.confirm(`确定移除 ${doneCount} 个已完成事项？\n剩余 ${totalCount - doneCount} 项未完成。`, {
+    title: "清除已完成",
+    tone: "danger",
+    okText: "清除",
+  });
+  if(!ok) return;
+
+  state.sections.forEach(s => s.groups.forEach(g => {
+    g.items = g.items.filter(i => !(i.done === true || i.done === "true"));
+  }));
+  render();
+  console.log("[clearDone] after render");
+});
+
+/* ---------------- 导出 JSON ---------------- */
+document.getElementById("exportJsonBtn").addEventListener("click", () => {
+  const json = JSON.stringify(state, null, 2);
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadBlob(json, "application/json;charset=utf-8", `data-${stamp}.json`);
+});
+
+/* ---------------- 导入 JSON ---------------- */
+const importInput = document.getElementById("importJsonInput");
+function triggerImport(){ importInput.value = ""; importInput.click(); }
+document.getElementById("importJsonBtn").addEventListener("click", triggerImport);
+document.getElementById("emptyImportBtn").addEventListener("click", triggerImport);
+document.getElementById("emptyStartBlankBtn").addEventListener("click", () => {
+  /* 直接从空开始：隐藏空状态、聚焦到"新增分类"输入框 */
+  emptyState.hidden = true;
+  document.getElementById("newSectionTitle").focus();
+});
+
+importInput.addEventListener("change", async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const next = migrate(parsed); // 走完整校验
+    const hasContent = state.sections.length > 0;
+    if(hasContent){
+      const ok = await ui.confirm(`将用 ${file.name} 替换当前所有数据？\n建议先「导出 JSON」备份当前状态。`, {
+        title: "覆盖当前数据",
+        tone: "danger",
+        okText: "替换",
+      });
+      if(!ok) return;
+    }
+    state = next;
+    render();
+    await ui.alert(`已导入：${state.sections.length} 个分类，${countItems(state)} 个事项`, {
+      title: "导入成功",
+    });
+  }catch(err){
+    await ui.alert(`导入失败：${err.message || err}\n\n请确认文件是合法的 data.json 格式。`, {
+      title: "导入失败",
+      tone: "danger",
+    });
+  }
+});
+
+function countItems(s){
+  let n = 0;
+  s.sections.forEach(sec => sec.groups.forEach(g => n += g.items.length));
+  return n;
+}
+
+/* ---------------- 清空全部 ---------------- */
+document.getElementById("clearAllBtn").addEventListener("click", async () => {
+  if(state.sections.length === 0){
+    await ui.alert("已经是空的了。", { title: "无需清空" });
+    return;
+  }
+  const ok = await ui.confirm("清空所有数据？\n建议先「导出 JSON」备份。\n\n此操作不可恢复。", {
+    title: "清空全部",
+    tone: "danger",
+    okText: "清空",
+  });
+  if(!ok) return;
+  state = migrate(EMPTY_DATA);
+  render();
+});
+
+/* ---------------- 工具：下载文件 ---------------- */
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ---------------- View switcher ---------------- */
+const VIEW_KEY = "checklist_view";
+
+function applyView(view){
+  if(document.body.dataset.view === view) return;
+  document.body.dataset.view = view;
+  document.querySelectorAll(".vs-btn").forEach(b => {
+    const active = b.dataset.view === view;
+    b.classList.toggle("active", active);
+    b.setAttribute("aria-checked", active ? "true" : "false");
+  });
+  localStorage.setItem(VIEW_KEY, view);
+}
+
+document.querySelectorAll(".vs-btn").forEach(b => {
+  b.addEventListener("click", () => applyView(b.dataset.view));
+});
+applyView(localStorage.getItem(VIEW_KEY) || "1");
+
+/* ---------------- Boot ---------------- */
+render();
+</script>
+</body>
+</html>
