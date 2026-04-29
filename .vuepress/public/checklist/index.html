@@ -891,6 +891,77 @@
   }
 
   /* =====================================================
+     撤销气泡 · 删除 item 后底部居中提示
+     ===================================================== */
+  .undo-toast{
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%) translateY(8px);
+    z-index: 1100;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 8px 10px 16px;
+    background: rgba(255, 253, 248, 0.96);
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-lg);
+    font-family: var(--font-text);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--text-1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s cubic-bezier(.2,.8,.2,1);
+  }
+  .undo-toast.show{
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  .undo-toast .msg{
+    color: var(--text-2);
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .undo-toast .msg strong{
+    color: var(--text-0);
+    font-weight: 600;
+  }
+  .undo-btn{
+    appearance: none; border: none;
+    background: transparent;
+    color: var(--brand);
+    font-family: var(--font-text);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    padding: 5px 12px;
+    border-radius: var(--r-sm);
+    transition: background .15s ease, color .15s ease;
+  }
+  .undo-btn:hover{
+    background: var(--brand-soft);
+    color: var(--brand-hover);
+  }
+  /* 移动端：宽度自适应、字号略小 */
+  @media (max-width: 560px){
+    .undo-toast{
+      bottom: 18px;
+      padding: 9px 6px 9px 14px;
+      font-size: 12.5px;
+      max-width: calc(100vw - 32px);
+    }
+    .undo-toast .msg{ max-width: 180px; }
+  }
+
+  /* =====================================================
      拖拽排序 · 手柄 / Popover / dragging 状态 / 置顶开关
      ===================================================== */
   /* 手柄（section 与 item 共用基础样式） */
@@ -1761,6 +1832,7 @@ metaEyebrowEl.addEventListener("keydown", e => {
 function render(){
   applyMeta();
   closePopover();
+  dismissUndoToast();
   board.innerHTML = "";
   const isEmpty = !state.sections || state.sections.length === 0;
   emptyState.hidden = !isEmpty;
@@ -2075,9 +2147,128 @@ function reflowItemOnToggle(li, group, item){
   }
 }
 
+/* ---------------- 撤销气泡 · 删除 item 后底部提示 ---------------- */
+const UNDO_DURATION = 5000;
+let undoToastEl = null;
+let undoTimerId = null;
+
+function clearUndoTimer(){
+  if(undoTimerId){ clearTimeout(undoTimerId); undoTimerId = null; }
+}
+function armUndoTimer(){
+  clearUndoTimer();
+  undoTimerId = setTimeout(dismissUndoToast, UNDO_DURATION);
+}
+
+function dismissUndoToast(){
+  clearUndoTimer();
+  if(undoToastEl){
+    undoToastEl.classList.remove("show");
+    const el = undoToastEl;
+    undoToastEl = null;
+    /* 等过渡结束再 remove，避免动画截断 */
+    setTimeout(() => { if(el.parentElement) el.remove(); }, 220);
+  }
+}
+
+/* 显示撤销气泡：替换式（前一个直接消失），5s 后自动关闭。
+   hover 气泡时暂停计时，鼠标离开时重置为完整 5s。
+   onUndo: 用户点击「撤销」时调用。 */
+function showUndoToast(message, onUndo){
+  dismissUndoToast();
+  const el = document.createElement("div");
+  el.className = "undo-toast";
+  const msg = document.createElement("span");
+  msg.className = "msg";
+  msg.innerHTML = message;          // 调用方负责构造安全 HTML（用 escapeHtml 包裹用户内容）
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "undo-btn";
+  btn.textContent = "撤销";
+  btn.addEventListener("click", () => {
+    dismissUndoToast();
+    onUndo();
+  });
+  el.appendChild(msg);
+  el.appendChild(btn);
+  /* hover 暂停 / 离开重置 */
+  el.addEventListener("mouseenter", clearUndoTimer);
+  el.addEventListener("mouseleave", armUndoTimer);
+  /* 触屏：触摸气泡同样暂停 */
+  el.addEventListener("touchstart", clearUndoTimer, { passive: true });
+  el.addEventListener("touchend",   armUndoTimer,   { passive: true });
+  document.body.appendChild(el);
+  /* 下一帧加 .show，触发淡入过渡 */
+  requestAnimationFrame(() => el.classList.add("show"));
+  undoToastEl = el;
+  armUndoTimer();
+}
+
+/* 简易 HTML 转义（用于把 item.text 安全嵌入气泡 message） */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[ch]));
+}
+
+/* 撤销恢复 item：splice 回原 group 的原 index 位置 + 插入 li 到正确 DOM 位置 */
+function restoreItem(group, item, index){
+  /* group 可能在用户撤销前被删了（极少见）—— 兜底回到全量 render */
+  if(!state.sections.some(s => s.groups.some(g => g.id === group.id))){
+    /* group 已不在 state，保险起见做一次校验，找不到就放弃 */
+    return;
+  }
+  /* 数据：插回原索引（若超出则 push 末尾） */
+  const insertAt = Math.min(Math.max(0, index), group.items.length);
+  group.items.splice(insertAt, 0, item);
+
+  /* DOM：找到 group 的 ul，移除可能的"还没有事项"占位，按数据顺序插入 li */
+  const ul = board.querySelector(`ul.items[data-group-id="${group.id}"]`);
+  if(!ul){
+    /* 整个 section 已被删（极端情况），全量 render 兜底 */
+    render();
+    return;
+  }
+  removeEmptyPlaceholder(ul);
+
+  /* 找到当前 group 中被插入 item 的"逻辑位置"对应的 li 锚点 */
+  const section = state.sections.find(s => s.groups.includes(group));
+  const li = renderItem(section, group, item);
+  insertItemLiByDataOrder(li, ul, group, item);
+  updateProgress();
+  saveState();
+}
+
+/* 按 group.items 数据顺序 + sortMode 不变量（未完成在前），把 li 插入 ul */
+function insertItemLiByDataOrder(li, ul, group, item){
+  /* 不变量：sortMode 时未完成在前；区段内部按 group.items 索引 */
+  const itemIdx = group.items.findIndex(i => i.id === item.id);
+  let anchor = null;
+  for(const el of ul.children){
+    if(el === li || !el.classList || !el.classList.contains("item")) continue;
+    /* sortMode 下：未完成 item 不能跨过已完成区 */
+    if(sortMode && !item.done && el.classList.contains("done")){
+      anchor = el;
+      break;
+    }
+    /* sortMode 下：已完成 item 应在已完成区内 */
+    if(sortMode && item.done && !el.classList.contains("done")){
+      continue;
+    }
+    const sibIdx = group.items.findIndex(i => i.id === el.dataset.id);
+    if(sibIdx > itemIdx){
+      anchor = el;
+      break;
+    }
+  }
+  if(anchor){ ul.insertBefore(li, anchor); }
+  else      { ul.appendChild(li); }
+}
+
 /* 删除单个 item：移除 li、splice 数据、必要时插入"空 group"占位。*/
 function removeItemDom(li, group, item){
   const ul = li.parentElement;
+  const index = group.items.findIndex(i => i.id === item.id);
   group.items = group.items.filter(i => i.id !== item.id);
   if(li.parentElement) li.remove();
   if(ul && group.items.length === 0){
@@ -2085,6 +2276,11 @@ function removeItemDom(li, group, item){
   }
   updateProgress();
   saveState();
+  /* 弹撤销气泡 */
+  const preview = item.text ? escapeHtml(item.text).slice(0, 24) : "（空）";
+  showUndoToast(`已删除 <strong>${preview}</strong>`, () => {
+    restoreItem(group, item, index);
+  });
 }
 
 /* 删除整个子分类：从数据中移除 group，并局部移除 group DOM。
