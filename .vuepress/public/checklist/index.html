@@ -427,6 +427,9 @@
     [data-view="auto"] ul.items{
       grid-template-columns: 1fr;
     }
+    /* 多列按钮在移动端无意义，直接隐藏避免误点 */
+    .vs-btn[data-view="2"],
+    .vs-btn[data-view="auto"]{ display: none; }
   }
   .item{
     display: flex; align-items: center; gap: 12px;
