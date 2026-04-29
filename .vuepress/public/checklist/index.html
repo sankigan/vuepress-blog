@@ -110,7 +110,7 @@
   body::before{
     content: "";
     position: absolute;
-    top: 20px; left: 0;
+    top: 60px; left: 0;
     width: 100%;
     height: 200px;
     pointer-events: none;
@@ -132,7 +132,7 @@
 
   /* 移动端：等高线再收紧一点 */
   @media (max-width: 560px){
-    body::before{ height: 140px; opacity: 0.4; }
+    body::before{ top: 45px; height: 140px; opacity: 0.4; }
   }
 
   /* 尊重用户的"减少动效"偏好 —— 当前装饰静态，预留扩展位 */
@@ -165,7 +165,7 @@
     font-size: 12px;
     font-weight: 500;
     letter-spacing: .02em;
-    margin-bottom: 18px;
+    margin-bottom: 25px;
     backdrop-filter: blur(10px) saturate(140%);
     -webkit-backdrop-filter: blur(10px) saturate(140%);
     box-shadow:
@@ -538,6 +538,9 @@
     font-family: var(--font-text);
     font-size: 12px;
     font-weight: 500;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
     transition: all .15s ease;
   }
   .icon-btn:hover{ color: var(--brand); background: var(--brand-soft); }
@@ -886,6 +889,157 @@
     .ui-dialog-actions{ flex-wrap: wrap; }
     .ui-dialog-actions .btn{ flex: 1; justify-content: center; }
   }
+
+  /* =====================================================
+     拖拽排序 · 手柄 / Popover / dragging 状态 / 置顶开关
+     ===================================================== */
+  /* 手柄（section 与 item 共用基础样式） */
+  .drag-handle{
+    flex: none;
+    width: 18px; height: 24px;
+    display: inline-grid; place-items: center;
+    color: var(--text-4);
+    cursor: grab;
+    border-radius: 4px;
+    user-select: none;
+    transition: color .15s ease, background .15s ease, opacity .15s ease;
+  }
+  .drag-handle:hover{
+    color: var(--brand);
+    background: var(--brand-soft);
+  }
+  .drag-handle:active{ cursor: grabbing; }
+  .drag-handle svg{ display: block; }
+
+  /* section 的手柄默认隐藏，hover 时浮现（与 .section-actions 一致的克制风格） */
+  .section-head .drag-handle{
+    opacity: 0;
+    transition: opacity .2s ease, color .15s ease, background .15s ease;
+  }
+  .section:hover .section-head .drag-handle,
+  .section:focus-within .section-head .drag-handle{ opacity: 1; }
+
+  /* item 手柄默认隐藏，hover 时浮现 */
+  .item .drag-handle{
+    opacity: 0;
+  }
+  .item:hover .drag-handle,
+  .item:focus-within .drag-handle{ opacity: 1; }
+
+  /* group 手柄：与 label 同行，hover group 时浮现；
+     无 label 的 group 也显示一个独立行的手柄 */
+  .group-head{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 18px 0 6px;
+  }
+  .section .group:first-of-type .group-head{ margin-top: 10px; }
+  .group-head .drag-handle{
+    opacity: 0;
+    height: 20px;
+    width: 16px;
+  }
+  .group:hover .group-head .drag-handle,
+  .group:focus-within .group-head .drag-handle{ opacity: 1; }
+  /* 手柄与 label 同行时，label 自身的外边距由 .group-head 接管，避免双倍空隙 */
+  .group-head .group-label{
+    margin: 0;
+  }
+
+  /* 拖拽进行中：全局压制 hover/actions，避免视觉干扰 */
+  body.dragging .section-actions,
+  body.dragging .item-actions{ opacity: 0 !important; }
+  body.dragging .item:hover{ background: transparent; }
+  body.dragging .section:hover{
+    box-shadow: var(--shadow-sm);
+    border-color: var(--border);
+  }
+  body.dragging .drag-handle{ opacity: 1 !important; }
+  body.dragging *{ cursor: grabbing !important; }
+
+  /* SortableJS 拖拽中的占位与镜像 */
+  .sortable-ghost{
+    opacity: 0.35;
+    background: var(--brand-soft) !important;
+  }
+  .sortable-chosen{ background: var(--bg-hover); }
+  .sortable-drag{
+    box-shadow: var(--shadow-lg);
+    background: var(--bg-card);
+  }
+
+  /* Popover · section 手柄单击弹出的轻量菜单 */
+  .popover{
+    position: absolute;
+    z-index: 1000;
+    min-width: 140px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-lg);
+    padding: 4px;
+    font-family: var(--font-text);
+    animation: popIn .14s ease;
+  }
+  @keyframes popIn{
+    from{ opacity: 0; transform: translateY(-2px); }
+    to  { opacity: 1; transform: none; }
+  }
+  .popover-item{
+    appearance: none; border: none; background: transparent;
+    width: 100%;
+    text-align: left;
+    padding: 7px 12px;
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    color: var(--text-1);
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: background .12s ease, color .12s ease;
+  }
+  .popover-item:hover:not(:disabled){
+    background: var(--brand-soft);
+    color: var(--brand-text);
+  }
+  .popover-item:disabled{
+    color: var(--text-4);
+    cursor: not-allowed;
+  }
+  .popover-item .pop-icon{
+    flex: none;
+    width: 14px; display: inline-grid; place-items: center;
+    color: var(--text-3);
+  }
+  .popover-item:hover:not(:disabled) .pop-icon{ color: var(--brand); }
+
+  /* 「未完成置顶」开关 · 紧凑 toggle */
+  .sort-toggle{
+    appearance: none; border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-3);
+    height: 28px;
+    padding: 0 10px;
+    margin-left: 8px;
+    border-radius: var(--r-sm);
+    font-family: var(--font-text);
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all .15s ease;
+  }
+  .sort-toggle:hover{ color: var(--brand); border-color: var(--brand); }
+  .sort-toggle.active{
+    background: var(--brand-soft);
+    color: var(--brand-text);
+    border-color: var(--brand);
+  }
+  .sort-toggle .dot{
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text-4);
+    transition: background .15s ease;
+  }
+  .sort-toggle.active .dot{ background: var(--brand); }
 </style>
 </head>
 <body>
@@ -927,6 +1081,11 @@
           <svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="3" width="3" height="2.5" rx=".6"/><rect x="6.5" y="3" width="3" height="2.5" rx=".6"/><rect x="11" y="3" width="3" height="2.5" rx=".6"/><rect x="2" y="6.7" width="3" height="2.5" rx=".6"/><rect x="6.5" y="6.7" width="3" height="2.5" rx=".6"/><rect x="11" y="6.7" width="3" height="2.5" rx=".6"/><rect x="2" y="10.5" width="3" height="2.5" rx=".6"/><rect x="6.5" y="10.5" width="3" height="2.5" rx=".6"/><rect x="11" y="10.5" width="3" height="2.5" rx=".6"/></svg>
         </button>
       </div>
+      <button class="sort-toggle" id="sortToggle" type="button" title="未完成事项排在前面"
+              aria-pressed="false">
+        <span class="dot" aria-hidden="true"></span>
+        <span>未完成置顶</span>
+      </button>
     </div>
   </div>
 
@@ -935,9 +1094,9 @@
   <section class="section empty-state" id="emptyState" hidden>
     <div class="empty-icon">📦</div>
     <h2 class="empty-title">还没有任何清单</h2>
-    <p class="empty-desc">从一份 <code>data.json</code> 导入数据，或者直接新建分类从零开始。</p>
+    <p class="empty-desc">从一份 <code>JSON</code> 文件导入数据，或者直接新建分类从零开始。</p>
     <div class="empty-actions">
-      <button class="btn btn-primary" id="emptyImportBtn">📥 导入 data.json</button>
+      <button class="btn btn-primary" id="emptyImportBtn">📥 导入 JSON</button>
       <button class="btn" id="emptyStartBlankBtn">✏️ 直接新建</button>
     </div>
   </section>
@@ -962,6 +1121,7 @@
   </footer>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 /* ============================================================
    Checklist · Vanilla JS, localStorage, no build step
@@ -1195,6 +1355,257 @@ function saveState(){
 
 let state = loadState();
 
+/* ---------------- 排序状态 · 未完成置顶 ---------------- */
+const SORT_MODE_KEY = "checklist_sort_mode";
+/* 默认开启「未完成置顶」 */
+let sortMode = localStorage.getItem(SORT_MODE_KEY) !== "off";
+
+/* 仅影响渲染顺序：返回一份按"未完成在前 + 各自保持原顺序"重排后的浅拷贝。
+   不修改 group.items 本身，确保拖拽/数据持久化逻辑仍以原顺序为准。*/
+function sortItemsForRender(items){
+  if(!sortMode) return items;
+  const undone = [];
+  const done = [];
+  items.forEach(it => (it.done ? done : undone).push(it));
+  return undone.concat(done);
+}
+
+/* ---------------- Popover 工具 ---------------- */
+let activePopover = null;
+function closePopover(){
+  if(!activePopover) return;
+  activePopover.remove();
+  activePopover = null;
+  document.removeEventListener("click", onDocClickClosePopover, true);
+  document.removeEventListener("keydown", onEscClosePopover, true);
+  window.removeEventListener("scroll", closePopover, true);
+  window.removeEventListener("resize", closePopover, true);
+}
+function onDocClickClosePopover(e){
+  if(activePopover && !activePopover.contains(e.target)) closePopover();
+}
+function onEscClosePopover(e){
+  if(e.key === "Escape") closePopover();
+}
+/* 在 anchor 元素下方打开一个 popover。
+   items: [{ label, icon?, disabled?, onClick }] */
+function openPopover(anchor, items){
+  closePopover();
+  const pop = document.createElement("div");
+  pop.className = "popover";
+  items.forEach(it => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "popover-item";
+    btn.disabled = !!it.disabled;
+    if(it.icon){
+      const ic = document.createElement("span");
+      ic.className = "pop-icon";
+      ic.textContent = it.icon;
+      btn.appendChild(ic);
+    }
+    const txt = document.createElement("span");
+    txt.textContent = it.label;
+    btn.appendChild(txt);
+    btn.addEventListener("click", () => {
+      if(btn.disabled) return;
+      const cb = it.onClick;
+      closePopover();
+      if(cb) cb();
+    });
+    pop.appendChild(btn);
+  });
+  document.body.appendChild(pop);
+  /* 定位：贴在 anchor 下方，左对齐；超出右侧时贴右对齐 */
+  const rect = anchor.getBoundingClientRect();
+  const popW = pop.offsetWidth;
+  const left = Math.min(
+    window.scrollX + rect.left,
+    window.scrollX + document.documentElement.clientWidth - popW - 8
+  );
+  pop.style.top  = `${window.scrollY + rect.bottom + 6}px`;
+  pop.style.left = `${Math.max(8, left)}px`;
+  activePopover = pop;
+  /* 延迟到下一次事件循环再绑，避免触发本次 click 事件 */
+  setTimeout(() => {
+    document.addEventListener("click", onDocClickClosePopover, true);
+    document.addEventListener("keydown", onEscClosePopover, true);
+    window.addEventListener("scroll", closePopover, true);
+    window.addEventListener("resize", closePopover, true);
+  }, 0);
+}
+
+/* ---------------- 拖拽手柄（共用 SVG） ---------------- */
+function makeDragHandle(extraClass){
+  const h = document.createElement("span");
+  h.className = "drag-handle" + (extraClass ? " " + extraClass : "");
+  h.setAttribute("aria-label", "拖拽排序");
+  h.innerHTML = `<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2.5" cy="2" r="1.2"/><circle cx="7.5" cy="2" r="1.2"/><circle cx="2.5" cy="7" r="1.2"/><circle cx="7.5" cy="7" r="1.2"/><circle cx="2.5" cy="12" r="1.2"/><circle cx="7.5" cy="12" r="1.2"/></svg>`;
+  return h;
+}
+
+/* ---------------- Section 排序操作 ---------------- */
+function moveSection(sectionId, direction){
+  const idx = state.sections.findIndex(s => s.id === sectionId);
+  if(idx < 0) return;
+  let target;
+  if(direction === "up")        target = idx - 1;
+  else if(direction === "down") target = idx + 1;
+  else if(direction === "top")  target = 0;
+  else if(direction === "bottom") target = state.sections.length - 1;
+  if(target === idx || target < 0 || target >= state.sections.length) return;
+  const [s] = state.sections.splice(idx, 1);
+  state.sections.splice(target, 0, s);
+  render();
+}
+
+/* 根据当前 section 位置，构造菜单项 */
+function buildSectionMenu(sectionId){
+  const idx = state.sections.findIndex(s => s.id === sectionId);
+  const isFirst = idx <= 0;
+  const isLast  = idx >= state.sections.length - 1;
+  return [
+    { label: "上移", icon: "↑", disabled: isFirst, onClick: () => moveSection(sectionId, "up") },
+    { label: "下移", icon: "↓", disabled: isLast,  onClick: () => moveSection(sectionId, "down") },
+    { label: "置顶", icon: "⤒", disabled: isFirst, onClick: () => moveSection(sectionId, "top") },
+    { label: "置底", icon: "⤓", disabled: isLast,  onClick: () => moveSection(sectionId, "bottom") },
+  ];
+}
+
+/* ---------------- SortableJS 初始化 ---------------- */
+/* 因为 render 是全量重建，每次都要重新 init。这里收集所有实例以便复用变量名提示。*/
+const sortableInstances = [];
+
+function destroySortables(){
+  while(sortableInstances.length){
+    const inst = sortableInstances.pop();
+    try{ inst.destroy(); }catch(e){}
+  }
+}
+
+/* 在 render 之后调用：为 #board 上的 section 容器、各 ul.items 绑定 SortableJS */
+function initSortable(){
+  if(typeof Sortable === "undefined") return;   // CDN 未就绪兜底
+  destroySortables();
+
+  /* 1) Section 之间排序 */
+  const boardEl = document.getElementById("board");
+  sortableInstances.push(Sortable.create(boardEl, {
+    animation: 160,
+    handle: ".section-drag-handle",
+    draggable: ".section",
+    ghostClass: "sortable-ghost",
+    chosenClass: "sortable-chosen",
+    dragClass: "sortable-drag",
+    onStart(){ document.body.classList.add("dragging"); closePopover(); },
+    onEnd(evt){
+      document.body.classList.remove("dragging");
+      const { oldIndex, newIndex } = evt;
+      if(oldIndex === newIndex || oldIndex == null || newIndex == null) return;
+      /* SortableJS 已把 <section> DOM 移到位，这里仅同步数据并刷新编号，避免全量 render */
+      const [s] = state.sections.splice(oldIndex, 1);
+      state.sections.splice(newIndex, 0, s);
+      refreshSectionNums();
+      saveState();
+    },
+  }));
+
+  /* 2) Group（子分类）同 section 内排序 */
+  document.querySelectorAll("#board > section.section").forEach(sectionEl => {
+    const sectionId = sectionEl.dataset.id;
+    sortableInstances.push(Sortable.create(sectionEl, {
+      animation: 160,
+      handle: ".group-drag-handle",
+      draggable: ".group",
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      dragClass: "sortable-drag",
+      onStart(){ document.body.classList.add("dragging"); closePopover(); },
+      onEnd(evt){
+        document.body.classList.remove("dragging");
+        const { oldIndex, newIndex } = evt;
+        if(oldIndex === newIndex || oldIndex == null || newIndex == null) return;
+        const sec = state.sections.find(s => s.id === sectionId);
+        if(!sec) return;
+        /* SortableJS 的 oldIndex/newIndex 是相对于该 section 内 .group 元素的索引，
+           与 sec.groups 数组顺序一一对应 */
+        const [g] = sec.groups.splice(oldIndex, 1);
+        sec.groups.splice(newIndex, 0, g);
+        saveState();
+      },
+    }));
+  });
+
+  /* 3) Item 跨 group 排序 */
+  document.querySelectorAll("ul.items").forEach(ul => {
+    sortableInstances.push(Sortable.create(ul, {
+      animation: 160,
+      group: "items",
+      handle: ".item-drag-handle",
+      draggable: ".item",
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      dragClass: "sortable-drag",
+      onStart(){ document.body.classList.add("dragging"); closePopover(); },
+      onEnd(evt){
+        document.body.classList.remove("dragging");
+        const itemEl = evt.item;
+        const fromUl = evt.from;
+        const toUl   = evt.to;
+        const itemId      = itemEl.dataset.id;
+        const fromGroupId = fromUl.dataset.groupId;
+        const toGroupId   = toUl.dataset.groupId;
+        if(!itemId || !fromGroupId || !toGroupId) return;
+
+        const fromGroup = findGroupById(fromGroupId);
+        const toGroup   = findGroupById(toGroupId);
+        if(!fromGroup || !toGroup) return;
+
+        /* 1. 在源 group 数据里按 id 找到并移除 */
+        const srcIdx = fromGroup.items.findIndex(i => i.id === itemId);
+        if(srcIdx < 0) return;
+        const [moved] = fromGroup.items.splice(srcIdx, 1);
+
+        /* 2. 计算目标 group 的插入下标。
+           因为开启「未完成置顶」时 DOM 顺序与数据顺序不一致，所以
+           不能直接用 newIndex。改用：找目标 ul 中该 item 的相邻 li
+           的 data-id，反查在 toGroup.items 中的位置。*/
+        let insertAt;
+        const next = itemEl.nextElementSibling;
+        if(next && next.classList.contains("item")){
+          const nextId = next.dataset.id;
+          const nextIdx = toGroup.items.findIndex(i => i.id === nextId);
+          insertAt = nextIdx >= 0 ? nextIdx : toGroup.items.length;
+        } else {
+          insertAt = toGroup.items.length;
+        }
+        toGroup.items.splice(insertAt, 0, moved);
+
+        /* SortableJS 已把 li DOM 移到位，仅处理两端的"空 group 占位"：
+           - 源 group 变空 → 加占位
+           - 目标 group 之前是空（现在加入了一项）→ 移除占位 */
+        if(fromGroup.items.length === 0){
+          ensureEmptyPlaceholder(fromUl);
+        }
+        if(toUl !== fromUl){
+          removeEmptyPlaceholder(toUl);
+        }
+        saveState();
+      },
+    }));
+  });
+}
+
+/* 在 state 中按 group id 定位 group 对象 */
+function findGroupById(groupId){
+  for(const s of state.sections){
+    for(const g of s.groups){
+      if(g.id === groupId) return g;
+    }
+  }
+  return null;
+}
+
 /* ---------------- Render ---------------- */
 const board = document.getElementById("board");
 const emptyState = document.getElementById("emptyState");
@@ -1329,6 +1740,7 @@ metaEyebrowEl.addEventListener("keydown", e => {
 
 function render(){
   applyMeta();
+  closePopover();
   board.innerHTML = "";
   const isEmpty = !state.sections || state.sections.length === 0;
   emptyState.hidden = !isEmpty;
@@ -1339,6 +1751,7 @@ function render(){
   }
   updateProgress();
   saveState();
+  initSortable();
 }
 
 function renderSection(section, num){
@@ -1356,6 +1769,20 @@ function renderSection(section, num){
       <button class="icon-btn danger" data-act="del-section">删除</button>
     <AZnv/div>
   `;
+  /* 手柄插入到最前面：拖拽用 handle，click 弹出菜单 */
+  const sectionHandle = makeDragHandle("section-drag-handle");
+  sectionHandle.title = "拖拽排序 · 单击展开菜单";
+  sectionHandle.addEventListener("click", e => {
+    e.stopPropagation();
+    /* 若 popover 已打开且锚点是同一个手柄 → 关闭（toggle 行为） */
+    if(activePopover && activePopover.dataset.anchorId === section.id){
+      closePopover();
+      return;
+    }
+    openPopover(sectionHandle, buildSectionMenu(section.id));
+    if(activePopover) activePopover.dataset.anchorId = section.id;
+  });
+  head.insertBefore(sectionHandle, head.firstChild);
   head.querySelector(".section-title").textContent = section.title;
   head.querySelector(".section-title").addEventListener("blur", e => {
     section.title = e.target.textContent.trim() || "未命名";
@@ -1415,21 +1842,28 @@ function renderSection(section, num){
   function commit(){
     const text = input.value.trim();
     if(!text) return;
-    let group;
+    /* 新建 group 属于结构性变化，仍走全量 render；
+       已有 group 走局部 DOM 更新，避免闪烁 */
     if(select.value === "__new__"){
-      group = { id: uid(), label: "", items: [] };
+      const group = { id: uid(), label: "", items: [] };
+      group.items.push({ id: uid(), text, done: false });
       section.groups.push(group);
-    } else {
-      group = section.groups.find(g => g.id === select.value);
+      input.value = "";
+      render();
+      requestAnimationFrame(() => {
+        const next = board.querySelector(`section[data-id="${section.id}"] .add-item-row input`);
+        if(next) next.focus();
+      });
+      return;
     }
+    const group = section.groups.find(g => g.id === select.value);
     if(!group) return;
-    group.items.push({ id: uid(), text, done: false });
+    const newItem = { id: uid(), text, done: false };
+    group.items.push(newItem);
     input.value = "";
-    render();
-    requestAnimationFrame(() => {
-      const next = board.querySelector(`section[data-id="${section.id}"] .add-item-row input`);
-      if(next) next.focus();
-    });
+    appendItemDom(section, group, newItem);
+    /* 焦点保持在当前输入框，无需 render 后再查找 */
+    input.focus();
   }
   input.addEventListener("keydown", e => { if(e.key === "Enter") commit(); });
   btn.addEventListener("click", commit);
@@ -1447,6 +1881,14 @@ function renderGroup(section, group){
   wrap.className = "group";
   wrap.dataset.id = group.id;
 
+  /* group-head：拖拽手柄 + 可编辑 label，同行排布 */
+  const head = document.createElement("div");
+  head.className = "group-head";
+
+  const handle = makeDragHandle("group-drag-handle");
+  handle.title = "拖拽排序子分类";
+  head.appendChild(handle);
+
   if(group.label !== undefined){
     const lbl = document.createElement("div");
     lbl.className = "group-label";
@@ -1461,11 +1903,14 @@ function renderGroup(section, group){
       if(!group.label) lbl.textContent = "（点击添加子分类名）";
       saveState();
     });
-    wrap.appendChild(lbl);
+    head.appendChild(lbl);
   }
+  wrap.appendChild(head);
 
   const ul = document.createElement("ul");
   ul.className = "items";
+  ul.dataset.sectionId = section.id;
+  ul.dataset.groupId   = group.id;
 
   if(group.items.length === 0){
     const empty = document.createElement("div");
@@ -1474,7 +1919,7 @@ function renderGroup(section, group){
     wrap.appendChild(empty);
   }
 
-  group.items.forEach(item => ul.appendChild(renderItem(section, group, item)));
+  sortItemsForRender(group.items).forEach(item => ul.appendChild(renderItem(section, group, item)));
   wrap.appendChild(ul);
 
   return wrap;
@@ -1492,6 +1937,10 @@ function renderItem(section, group, item){
   cb.addEventListener("change", () => {
     item.done = cb.checked === true;   // 显式 boolean，不依赖 truthy
     li.classList.toggle("done", item.done);
+    /* sortMode 下：勾选后局部移动该 li 到对应区段，避免全量 render 闪烁 */
+    if(sortMode){
+      reflowItemOnToggle(li, group, item);
+    }
     updateProgress();
     saveState();
     if(window.CHECKLIST_DEBUG) console.log("[toggle]", item.id, item.text, "→", item.done);
@@ -1506,8 +1955,7 @@ function renderItem(section, group, item){
   text.addEventListener("blur", () => {
     const v = text.textContent.trim();
     if(!v){
-      group.items = group.items.filter(i => i.id !== item.id);
-      render();
+      removeItemDom(li, group, item);
       return;
     }
     item.text = v;
@@ -1524,14 +1972,130 @@ function renderItem(section, group, item){
   del.className = "icon-btn danger";
   del.textContent = "删除";
   del.addEventListener("click", () => {
-    group.items = group.items.filter(i => i.id !== item.id);
-    render();
+    removeItemDom(li, group, item);
   });
   actions.appendChild(del);
 
+  li.appendChild(makeDragHandle("item-drag-handle"));
   li.appendChild(cb);
   li.appendChild(text);
   li.appendChild(actions);
+  return li;
+}
+
+/* ---------------- 局部 DOM 更新（避免全量 render 闪烁） ---------------- */
+
+/* 勾选/取消时按 sortMode 把该 li 重新插到 ul 内的正确位置。
+   不变量：未完成在前，已完成在后；区段内部按 group.items 数据顺序排列。
+   - 刚勾选（done=true）：沉到已完成区顶部 = 插到第一个其他 .done 之前
+   - 刚取消（done=false）：回到未完成区中"按数据数组索引排序"的原本位置 */
+function reflowItemOnToggle(li, group, item){
+  const ul = li.parentElement;
+  if(!ul || !ul.classList.contains("items")) return;
+
+  if(item.done){
+    /* 沉到已完成区顶部 */
+    const firstOtherDone = Array.from(ul.children).find(el =>
+      el !== li && el.classList && el.classList.contains("item") && el.classList.contains("done")
+    );
+    if(firstOtherDone){
+      ul.insertBefore(li, firstOtherDone);
+    } else {
+      ul.appendChild(li);
+    }
+    return;
+  }
+
+  /* done=false：回到未完成区里按 group.items 数据顺序的对应位置。
+     做法：在未完成 li 中找第一个"数据索引大于当前 item 数据索引"的兄弟，插到它之前；
+     若找不到，则插到未完成区末尾（即第一个 .done 之前）。*/
+  const itemIdx = group.items.findIndex(i => i.id === item.id);
+  let anchor = null;
+  for(const el of ul.children){
+    if(el === li) continue;
+    if(!el.classList || !el.classList.contains("item")) continue;
+    if(el.classList.contains("done")){
+      /* 进入已完成区域 → 未完成区到此结束，插到这里 */
+      anchor = el;
+      break;
+    }
+    const sibIdx = group.items.findIndex(i => i.id === el.dataset.id);
+    if(sibIdx > itemIdx){
+      anchor = el;
+      break;
+    }
+  }
+  if(anchor){
+    ul.insertBefore(li, anchor);
+  } else {
+    ul.appendChild(li);
+  }
+}
+
+/* 删除单个 item：移除 li、splice 数据、必要时插入"空 group"占位。*/
+function removeItemDom(li, group, item){
+  const ul = li.parentElement;
+  group.items = group.items.filter(i => i.id !== item.id);
+  if(li.parentElement) li.remove();
+  if(ul && group.items.length === 0){
+    ensureEmptyPlaceholder(ul);
+  }
+  updateProgress();
+  saveState();
+}
+
+/* 给空 group 的 ul 之前插入"还没有事项"占位（若已存在则跳过） */
+function ensureEmptyPlaceholder(ul){
+  const wrap = ul.parentElement;
+  if(!wrap) return;
+  if(wrap.querySelector(":scope > .empty")) return;
+  const empty = document.createElement("div");
+  empty.className = "empty";
+  empty.textContent = "还没有事项 — 在下方加一项吧";
+  wrap.insertBefore(empty, ul);
+}
+
+/* 移除 ul 所属 group 的"还没有事项"占位 */
+function removeEmptyPlaceholder(ul){
+  const wrap = ul.parentElement;
+  if(!wrap) return;
+  const empty = wrap.querySelector(":scope > .empty");
+  if(empty) empty.remove();
+}
+
+/* 拖拽 section 后刷新所有 .section-num 的编号文案 */
+function refreshSectionNums(){
+  const sections = board.querySelectorAll(":scope > section.section");
+  sections.forEach((sec, i) => {
+    const numEl = sec.querySelector(":scope > .section-head > .section-num");
+    if(numEl) numEl.textContent = String(i + 1).padStart(2, "0");
+  });
+}
+
+/* 在已存在的 ul 末尾追加新 item，避免全量 render。
+   sortMode 开启时按"未完成在前"插到第一个 .done 之前。
+   返回新建的 li 以便外部继续操作。*/
+function appendItemDom(section, group, item){
+  const ul = board.querySelector(`ul.items[data-group-id="${group.id}"]`);
+  if(!ul) return null;
+  /* 如果之前是空 group，移除占位 */
+  removeEmptyPlaceholder(ul);
+  const li = renderItem(section, group, item);
+  /* 新建项一律 done=false，sortMode 时插到第一个 .done 之前 */
+  if(sortMode && !item.done){
+    const firstDone = Array.from(ul.children).find(el =>
+      el.classList && el.classList.contains("item") && el.classList.contains("done")
+    );
+    if(firstDone){
+      ul.insertBefore(li, firstDone);
+    } else {
+      ul.appendChild(li);
+    }
+  } else {
+    ul.appendChild(li);
+  }
+  updateProgress();
+  saveState();
   return li;
 }
 
@@ -1636,7 +2200,7 @@ importInput.addEventListener("change", async (e) => {
       title: "导入成功",
     });
   }catch(err){
-    await ui.alert(`导入失败：${err.message || err}\n\n请确认文件是合法的 data.json 格式。`, {
+    await ui.alert(`导入失败：${err.message || err}\n\n请确认文件是合法的 JSON 格式。`, {
       title: "导入失败",
       tone: "danger",
     });
@@ -1693,6 +2257,20 @@ document.querySelectorAll(".vs-btn").forEach(b => {
   b.addEventListener("click", () => applyView(b.dataset.view));
 });
 applyView(localStorage.getItem(VIEW_KEY) || "1");
+
+/* ---------------- 未完成置顶 toggle ---------------- */
+const sortToggleEl = document.getElementById("sortToggle");
+function applySortToggleUI(){
+  sortToggleEl.classList.toggle("active", sortMode);
+  sortToggleEl.setAttribute("aria-pressed", sortMode ? "true" : "false");
+}
+sortToggleEl.addEventListener("click", () => {
+  sortMode = !sortMode;
+  localStorage.setItem(SORT_MODE_KEY, sortMode ? "on" : "off");
+  applySortToggleUI();
+  render();
+});
+applySortToggleUI();
 
 /* ---------------- Boot ---------------- */
 render();
