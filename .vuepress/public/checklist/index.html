@@ -349,8 +349,8 @@
   /* =====================================================
      Group
      ===================================================== */
-  .group{ padding: 0; }
-  .group + .group{ margin-top: 14px; }   /* L2：子分类之间略放宽 */
+  .group{ padding: 4px 0; }
+  .group + .group{ margin-top: 6px; }   /* L2：子分类之间略放宽（已含 group 自身上下 padding 4+4） */
   .group-label{
     display: inline-block;
     font-size: 11px;
@@ -932,9 +932,9 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    margin: 18px 0 6px;
+    margin: 2px 0 6px;
   }
-  .section .group:first-of-type .group-head{ margin-top: 10px; }
+  .section .group:first-of-type .group-head{ margin-top: 6px; }
   .group-head .drag-handle{
     opacity: 0;
     height: 20px;
@@ -946,9 +946,29 @@
   .group-head .group-label{
     margin: 0;
   }
+  /* group 头部右侧操作区：删除子分类等，hover group 时浮现 */
+  .group-actions{
+    margin-left: auto;
+    margin-right: 6px;
+    display: flex; gap: 2px;
+    opacity: 0;
+    transition: opacity .15s ease;
+  }
+  .group:hover .group-actions,
+  .group:focus-within .group-actions{ opacity: 1; }
+
+  /* 仅在 hover 删除按钮时，整个子分类区域变灰底，按钮自身仍走默认 .icon-btn.danger 红样式 */
+  .group{
+    border-radius: var(--r-md);
+    transition: background-color .18s ease;
+  }
+  .group:has(.group-actions .icon-btn.danger:hover){
+    background: var(--bg-hover);
+  }
 
   /* 拖拽进行中：全局压制 hover/actions，避免视觉干扰 */
   body.dragging .section-actions,
+  body.dragging .group-actions,
   body.dragging .item-actions{ opacity: 0 !important; }
   body.dragging .item:hover{ background: transparent; }
   body.dragging .section:hover{
@@ -1905,6 +1925,29 @@ function renderGroup(section, group){
     });
     head.appendChild(lbl);
   }
+
+  /* 删除子分类按钮（hover group 时浮现） */
+  const actions = document.createElement("div");
+  actions.className = "group-actions";
+  const delBtn = document.createElement("button");
+  delBtn.className = "icon-btn danger";
+  delBtn.type = "button";
+  delBtn.textContent = "删除";
+  delBtn.addEventListener("click", async () => {
+    const itemCount = group.items.length;
+    const labelText = group.label ? `「${group.label}」` : "该子分类";
+    const tail = itemCount > 0 ? `\n该子分类下的 ${itemCount} 个事项也会一并移除。` : "";
+    const ok = await ui.confirm(`删除${labelText}？${tail}`, {
+      title: "删除子分类",
+      tone: "danger",
+      okText: "删除",
+    });
+    if(!ok) return;
+    removeGroupDom(section, group, wrap);
+  });
+  actions.appendChild(delBtn);
+  head.appendChild(actions);
+
   wrap.appendChild(head);
 
   const ul = document.createElement("ul");
@@ -2042,6 +2085,42 @@ function removeItemDom(li, group, item){
   }
   updateProgress();
   saveState();
+}
+
+/* 删除整个子分类：从数据中移除 group，并局部移除 group DOM。
+   若删除后 section 已无任何 group，需要走全量 render —— 因为
+   add-item-row 的 select 在初次 render 时被冻结为"（先创建一个子分类）"，
+   不重 render 就无法把它从"现有 group 列表"切回该状态。*/
+function removeGroupDom(section, group, wrap){
+  section.groups = section.groups.filter(g => g.id !== group.id);
+  if(section.groups.length === 0){
+    /* 极少见的边界：当前 section 变空，走全量 render 让 add-item-row 切到空态 */
+    render();
+    return;
+  }
+  if(wrap && wrap.parentElement) wrap.remove();
+  /* 同步刷新 add-item-row 的 select：移除已删除 group 对应的 option */
+  refreshSectionGroupSelect(section);
+  updateProgress();
+  saveState();
+}
+
+/* 重新填充某 section 的 add-item-row select 选项，使其与 section.groups 一致 */
+function refreshSectionGroupSelect(section){
+  const sectionEl = board.querySelector(`section[data-id="${section.id}"]`);
+  if(!sectionEl) return;
+  const select = sectionEl.querySelector(":scope > .add-item-row > select.add-group-select");
+  if(!select) return;
+  const prevValue = select.value;
+  select.innerHTML = "";
+  section.groups.forEach(g => {
+    const opt = document.createElement("option");
+    opt.value = g.id;
+    opt.textContent = g.label ? `【${g.label}】` : "（无标签）";
+    select.appendChild(opt);
+  });
+  /* 尽量保留原选中项；若已不存在，浏览器会自动选第一项 */
+  if(section.groups.some(g => g.id === prevValue)) select.value = prevValue;
 }
 
 /* 给空 group 的 ul 之前插入"还没有事项"占位（若已存在则跳过） */
