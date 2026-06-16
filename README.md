@@ -9,7 +9,7 @@ modules:
 bannerBrand:
   bgImage: /bg.svg
   title: Sanki's Blog
-  description: 学习、记录、分享
+  description: 👋🏻 学习、记录、分享
   tagline: 等苦尽甘来那一天山河星月都做谢礼。
   buttons:
     - text: 开始阅读

@@ -3,3 +3,55 @@
   display: flex;
   flex-direction: column-reverse;
 }
+
+// Semi Design 风格难度标签
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+
+  h1 {
+    margin: 0;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+}
+
+.difficulty-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  vertical-align: middle;
+  flex-shrink: 0;
+
+  &--easy {
+    color: #008853;
+    background-color: #e8f8f0;
+    border-color: #b0dcc8;
+  }
+
+  &--medium {
+    color: #b37300;
+    background-color: #fff8e6;
+    border-color: #f0d48a;
+  }
+
+  &--hard {
+    color: #b31515;
+    background-color: #fff0f0;
+    border-color: #f0b0b0;
+  }
+}
