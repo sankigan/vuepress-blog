@@ -16,11 +16,11 @@ bannerBrand:
       link: /timeline.html
   socialLinks:
     - { icon: 'SimpleIconsGithub', link: 'https://github.com/sankigan' }
-    - { icon: 'SimpleIconsLeetcode', link: 'https://leetcode.cn/u/sanqi/' }
+    - { icon: 'SimpleIconsLeetcode', link: 'https://leetcode.cn/u/sank1/' }
 blog:
   socialLinks:
     - { icon: 'SimpleIconsGithub', link: 'https://github.com/sankigan' }
-    - { icon: 'SimpleIconsLeetcode', link: 'https://leetcode.cn/u/sanqi/' }
+    - { icon: 'SimpleIconsLeetcode', link: 'https://leetcode.cn/u/sank1/' }
 features:
   - title: 过去 🌙
     details: 往事如烟逝水东，莫叹流光负初衷
