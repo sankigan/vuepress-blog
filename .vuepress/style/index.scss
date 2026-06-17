@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Smiley Sans';
+  src: url('/fonts/SmileySans-Oblique.woff2') format('woff2');
+  font-weight: normal;
+  font-style: oblique;
+  font-display: swap;
+}
+
 // 时间线年份倒序排列
 .timeline-content {
   display: flex;
@@ -54,4 +62,10 @@
     background-color: #fff0f0;
     border-color: #f0b0b0;
   }
+}
+
+// 中文字体使用得意黑
+body,
+.theme-reco-content {
+  font-family: 'Smiley Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
