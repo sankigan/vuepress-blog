@@ -1,0 +1,851 @@
+// ========================================================================
+// 时间轴页面 - 杂志卡片瀑布流风格
+// 作用范围: .vuepress/layouts/Timeline.vue (.timeline-mag)
+// 适配: 亮/暗双主题 (通过 reco 主题 CSS 变量)
+//
+// 注意: .timeline-mag 是 GenericContainer 的根节点 (包含导航栏!),
+//       绝不能在它身上限定 max-width, 否则导航栏会被一起压窄。
+//       宽度约束统一下沉到直接子级 (header / year-section) 上。
+// ========================================================================
+
+// 内容区共享约束: 居中 + 最大宽度 + 左右内边距
+@mixin timeline-content-bounds {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  box-sizing: border-box;
+}
+
+.timeline-mag {
+  // 作为浮动 tooltip (.heatmap-tip) 的 absolute 参考系
+  // tooltip 是单例, 挂在 .timeline-mag 末尾, 跨所有 year-section 共用
+  position: relative;
+
+  // 头部 (无下边框, 更轻)
+  .timeline-header {
+    @include timeline-content-bounds;
+    margin-top: 2rem;
+    // 与下方第一个 year-section 留出更大的呼吸距离, 让筛选条与时间线主体视觉分组更清晰
+    margin-bottom: 3rem;
+  }
+
+  .timeline-header__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  // year-section: 左右两栏布局
+  //  - 左栏 (.year-aside): 固定 96px, sticky 跟随滚动 (年份大字 + 篇数)
+  //  - 右栏 (.year-main): flex: 1, 装热力图 + 文章卡片/列表
+  //  - 栏间 gap 1.5rem, 让年份柱跟右侧内容有清晰的"杂志"分隔感
+  //
+  // ⚠️ 切勿在此层或祖先 (.timeline-mag) 上加 overflow: hidden/auto,
+  //    否则 .year-aside 的 position: sticky 会直接失效.
+  .year-section {
+    @include timeline-content-bounds;
+    display: flex;
+    align-items: flex-start; // 让左栏 sticky 生效 (默认 stretch 会拉满整列, sticky 无意义)
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    &:last-child {
+      margin-bottom: 3rem;
+    }
+  }
+
+  // 左栏: 年份 + 篇数 + sticky
+  .year-aside {
+    flex: 0 0 96px;          // 固定宽度, 不参与伸缩, 给右侧热力图留最大空间
+    position: sticky;
+    // top 计算: reco 主题 .navbar-container 高度 h-16 (64px = 4rem), 且本身 sticky top-0.
+    //  左栏 sticky 必须躲在 navbar 下方, 否则滚动时会被 navbar 遮挡.
+    //  4rem (navbar) + 1rem (呼吸) = 5rem.
+    top: 5rem;
+    align-self: flex-start;  // 双保险: sticky 元素需要明确高度边界, 避免被 flex 拉伸
+    // 与右栏顶部对齐:
+    //  右栏首块 .heatmap-panel--inline 自带 margin-top: 0.2rem (≈3.2px),
+    //  把这个偏移搬到左栏, 让左右两栏的"内容顶端"对齐到同一基线.
+    //  年份本身 font-size: 2rem; line-height: 1, 顶部就紧贴容器, 无需再加额外补偿.
+    margin-top: 0.2rem;
+    user-select: none;       // 装饰性内容, 防止误选
+  }
+
+  // 年份大字: 主题色渐变, 作为整页的视觉锚点
+  // ⚠️ 用 h2 标签时, reco 主题会注入 padding-top / border-bottom / margin-top 等默认样式,
+  //    导致年份基线被往下推, 与右栏月份标签对不齐. 这里逐项重置.
+  .year-aside__year {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    background: linear-gradient(
+      120deg,
+      var(--theme-color, #5e72e4) 0%,
+      var(--theme-color-secondary, #825ee4) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-variant-numeric: tabular-nums; // 4 位数等宽, 视觉稳
+  }
+
+  // 装饰性短分隔线: 跟年份渐变同色系, 桥接"年份 ↔ 篇数"
+  .year-aside__divider {
+    display: block;
+    width: 32px;
+    height: 2px;
+    margin: 0.7rem 0 0.55rem;
+    border-radius: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--theme-color, #5e72e4) 0%,
+      transparent 100%
+    );
+    opacity: 0.55;
+  }
+
+  // 篇数: "数字大 + 单位小" 的杂志排版
+  .year-aside__count {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+  }
+  .year-aside__count-num {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-color, inherit);
+    line-height: 1;
+  }
+  .year-aside__count-unit {
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.75;
+  }
+
+  // 右栏: 装下原本 section 的所有内容 (热力图 + 卡片/列表)
+  // min-width: 0 防止 flex 子项默认 min-content 撑爆父容器, 导致热力图 53fr 无法压缩
+  .year-main {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  // ========================================
+  // 热力图 (作为每年的"小结"内嵌在 year-section 顶部)
+  // ========================================
+  // 设计调整: 不再有顶部独立面板, 改为内嵌; 格子尺寸缩到 10px, 更轻盈
+  // 视觉层次: 年份标题 (主) -> 热力图 (辅, 当年发布密度概览) -> 文章卡片 (主内容)
+  //
+  // 对齐设计 (与下方 .card-grid 严格左对齐):
+  //  - 热力图整体左边缘 = 卡片网格左边缘 = .year-section 内容区左边线
+  //  - 也就是 weekdays 列 "Mon/Wed/Fri" 文字的左边 = 卡片的左边
+  //  - 不再画蛇添足加 padding-left, 否则月/周标签会戳到卡片左侧之外, 视觉割裂
+  //
+  // 间距设计:
+  //  - 与下方卡片之间留 1.6rem (约等于卡片间 gap 的 2 倍), 提供清晰的"概览 / 列表"分段感
+  //  - 不要给上方 (.year-header) 加 margin, 让标题和热力图保持紧密关系
+  .heatmap-panel--inline {
+    margin-top: 0.2rem;
+    margin-bottom: 1.6rem;
+  }
+
+  // 正文区: 左侧周几标签 + 右侧 (月标签 + 格子矩阵)
+  // 设计: 不再用 overflow-x 横滚兜底, 改为 1fr 弹性列宽充满全宽
+  //  - 1fr 自动适配任何容器宽度, 桌面/平板/手机均无需横滚
+  //  - 格子从"固定正方形"变为"自适应长方形", 视觉协调性 > 像素级几何感
+  .heatmap-panel__body {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  // 周几标签竖排 (只标 Mon/Wed/Fri, 与 GitHub 一致, 减少视觉噪音)
+  // 尺寸基准: 行高跟随 .heatmap-grid 的行高 (16px), 与格子矩阵保持垂直对齐
+  .heatmap-weekdays {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-rows: repeat(7, 16px);
+    gap: 2px;
+    // 顶部对齐到月标签下方 (月标签高 ~14px + 4px gap)
+    padding-top: 18px;
+    font-size: 0.62rem;
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.65));
+    font-variant-numeric: tabular-nums;
+    line-height: 16px;
+    text-align: right;
+    width: 22px;
+  }
+
+  // 包裹"月标签 + 格子"为同一列
+  // flex: 1 让它撑满 .heatmap-panel__body 剩余宽度, 使内部 1fr 列宽得到正确基准
+  // min-width: 0 是 flex 子项做 grid 自适应的标准防溢出处理
+  .heatmap-grid-wrap {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  // 月份标签: 与下方 grid 共享 53 列 1fr, 列宽自动一致, gridColumnStart 自然对齐
+  // 注意原 grid-auto-flow: column 是配合固定列宽用的, 改 1fr 后用显式 grid-template-columns
+  .heatmap-months {
+    display: grid;
+    grid-template-columns: repeat(53, 1fr);
+    gap: 2px;
+    height: 14px;
+    font-size: 0.62rem;
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.65));
+    line-height: 14px;
+
+    &__label {
+      grid-row: 1;
+      white-space: nowrap;
+    }
+  }
+
+  // 格子矩阵: 53 列 1fr 弹性, 7 行固定 12px (高度保持 GitHub 经典感)
+  // 列宽 = (容器宽 - 52 * 2px gap) / 53 ≈ 18~20px (取决于卡片网格实际宽度)
+  // 行高固定 16px → 格子比例 ≈ 1.1:1, 接近正方形, 视觉更接近 GitHub 经典感
+  // 总高度 = 7*16 + 6*2 = 124px, 比之前的 96px 略高但仍紧凑
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(53, 1fr);
+    grid-template-rows: repeat(7, 16px);
+    gap: 2px;
+  }
+
+  // 单元格: 默认底色 lv0, lv1..lv4 用琥珀金渐深
+  // 不再固定 width/height: 完全由父 grid 的列宽 + 12px 行高决定
+  .heatmap-cell {
+    border-radius: 2px;
+    background: rgba(125, 125, 125, 0.1);
+    transition: transform 0.12s ease, outline-color 0.12s ease;
+    outline: 1.5px solid transparent;
+    outline-offset: -1px;
+    cursor: default;
+
+    &--lv1 { background: #fbe5b7; }
+    &--lv2 { background: #f9d488; }
+    &--lv3 { background: #f5a623; }
+    &--lv4 { background: #c9851a; }
+    // lv0 已是默认 rgba 灰; --blank 与 lv0 视觉一致但禁用 hover
+    &--blank {
+      background: transparent;
+      pointer-events: none;
+    }
+    // 今年中今天之后的日期: 仅用极淡背景暗示"未到来", 不加任何边框
+    //  - 背景比 lv0 (rgba 0.1) 弱 75%, 形成"实灰 / 影灰"层次
+    //  - 不加 outline: 边框在密集小格上会变成噪点, 反而抢戏 (违背"弱化未来"意图)
+    //  - 禁用 pointer-events 跳过 hover/tooltip
+    &--future {
+      background: rgba(125, 125, 125, 0.025);
+      pointer-events: none;
+    }
+
+    &:hover {
+      outline-color: rgba(245, 166, 35, 0.85);
+      transform: scale(1.12);
+    }
+  }
+
+  // 浮动 tooltip: 跟随鼠标, 单例
+  // - 不用 fixed (会脱离 wrap 的相对定位上下文)
+  // - 不做 hover 后渐显延时, 保持响应速度
+  .heatmap-tip {
+    position: absolute;
+    z-index: 20;
+    min-width: 140px;
+    max-width: 280px;
+    // 高度上限 + 外层兜底: 防止单日发文过多时, 内层 __list 的 max-height
+    // 因 li 渲染策略被全局样式干扰而失效时, tooltip 整体溢出被父容器裁切.
+    //  - 50vh 自适应不同屏幕高度 (短屏笔记本/竖屏手机也不会撑爆视口)
+    //  - display: flex column: 让 __date/__count 固定, __list 拿剩余空间滚动
+    display: flex;
+    flex-direction: column;
+    max-height: 50vh;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: rgba(30, 30, 30, 0.94);
+    color: #fff;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+
+    &.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    &__date {
+      // flex column 下 header 不被 list 挤压
+      flex: 0 0 auto;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+      margin-bottom: 2px;
+    }
+
+    &__count {
+      flex: 0 0 auto;
+      font-size: 0.66rem;
+      color: #f5a623;
+      margin-bottom: 4px;
+
+      &--empty {
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 0;
+      }
+    }
+
+    &__list {
+      // 防御性 reset: 兜住可能被 vuepress 全局样式注入的 list-style/padding
+      list-style: none !important;
+      margin: 0;
+      padding: 0;
+      // flex: 1 1 auto + min-height: 0 : 让 list 抢占 tooltip 内剩余空间,
+      // 配合外层 max-height 自然出现滚动条 (而不是依赖固定 px 上限).
+      //  - min-height: 0 必须显式声明, 否则 flex 子项默认 min-content 会撑破父容器, 滚动失效
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      // 自定义细滚动条 (Webkit), 跟暗色 tooltip 协调
+      &::-webkit-scrollbar { width: 4px; }
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+      }
+    }
+
+    &__item {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.88);
+      padding: 2px 0;
+      // 长标题单行省略, 不要换行让 tooltip 变巨型
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      &::before {
+        content: '·';
+        margin-right: 6px;
+        color: #f5a623;
+      }
+    }
+  }
+
+  .timeline-meta {
+    margin: 0;
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+    font-size: 0.9rem;
+
+    strong {
+      color: var(--text-color, inherit);
+      font-weight: 700;
+      font-size: 1rem;
+      margin: 0 2px;
+    }
+  }
+
+  // 视图切换器
+  .view-switcher {
+    display: inline-flex;
+    border: 1px solid var(--border-color, rgba(125, 125, 125, 0.25));
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-color-secondary, rgba(125, 125, 125, 0.05));
+  }
+
+  .view-switcher__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border: 0;
+    background: transparent;
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+    cursor: pointer;
+    font-size: 0.78rem;
+    line-height: 1;
+    transition: all 0.18s ease;
+
+    & + & {
+      border-left: 1px solid var(--border-color, rgba(125, 125, 125, 0.2));
+    }
+
+    &:hover {
+      color: var(--theme-color, #5e72e4);
+    }
+
+    &.active {
+      background: var(--theme-color, #5e72e4);
+      color: #fff;
+    }
+  }
+
+  // 筛选条
+  .timeline-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .filter-label {
+    flex-shrink: 0;
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+    font-size: 0.85rem;
+    margin-right: 0.2rem;
+  }
+
+  .filter-chip {
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    border: 1px solid var(--border-color, rgba(125, 125, 125, 0.3));
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-color, inherit);
+    cursor: pointer;
+    transition: all 0.18s ease;
+
+    &:hover {
+      border-color: var(--theme-color, #5e72e4);
+      color: var(--theme-color, #5e72e4);
+
+      .filter-chip__count {
+        color: var(--theme-color, #5e72e4);
+        opacity: 0.85;
+      }
+    }
+
+    &.active {
+      background: var(--theme-color, #5e72e4);
+      color: #fff;
+      border-color: var(--theme-color, #5e72e4);
+
+      .filter-chip__count {
+        color: #fff;
+        opacity: 0.75;
+      }
+    }
+
+    &--tag {
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      opacity: 0.85;
+    }
+
+    &--more {
+      border-style: dashed;
+      color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+    }
+  }
+
+  // chip 内的数量徽章: 比 chip 文本更小更淡, 提供信息但不抢视觉
+  .filter-chip__count {
+    margin-left: 5px;
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.55;
+    transition: color 0.18s ease, opacity 0.18s ease;
+  }
+
+
+  // ======================
+  // 卡片视图: 桌面端约 4 列, 强调舒展感
+  // minmax 最小宽度决定"何时换行": 260px 在 1200~1440px 视口下稳定 4 列
+  // ======================
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.8rem;
+  }
+
+  .post-card {
+    display: flex;
+    flex-direction: column;
+    padding: 0.65rem 0.8rem 0.7rem;
+    border-radius: 8px;
+    background: var(--bg-color-secondary, rgba(125, 125, 125, 0.05));
+    border: 1px solid transparent;
+    text-decoration: none;
+    color: inherit;
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.2s ease,
+      border-color 0.2s ease,
+      background 0.2s ease;
+    position: relative;
+    overflow: hidden;
+
+    // 左侧装饰色条 (悬浮显形)
+    // 设计原则: 克制, 不做模糊/光晕等过度装饰
+    //  1. 4px 实心纯色, 干净利落 (参考 Linear / Notion 卡片高亮)
+    //  2. 用琥珀金 #f5a623 作为"点睛色": 与冷色蓝紫主题形成对比, 比同色条更有视觉记忆点
+    //     (类似"被标记/被阅读"的隐喻, 暖色更符合博文气质)
+    //  3. 上下留 8px 内缩, 色条不顶满卡片, 形似"书签" 而非"边框"
+    //  4. 入场: 从左滑入 + 淡入, 比 scaleY 自然
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      background: #f5a623;
+      border-radius: 0 2px 2px 0;
+      transform: translateX(-100%);
+      opacity: 0;
+      transition:
+        transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 0.2s ease;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      // 双层柔光: 近距离细腻阴影 + 远距离主题色微光, 比单层硬阴影更"软"
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.04),
+        0 12px 28px rgba(94, 114, 228, 0.1);
+      border-color: var(--border-color, rgba(94, 114, 228, 0.2));
+      background: var(--bg-color, #fff);
+
+      &::before {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      .post-card__title {
+        color: var(--theme-color, #5e72e4);
+      }
+    }
+
+    &__head {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.3rem;
+      // 强锁 head 高度: 用固定 height (非 min-height) 保证 chip 有无两种状态高度完全一致, 杜绝抖动
+      // 高度 = chip line-height(18px) + chip 垂直 padding(2px) = 20px
+      height: 20px;
+      line-height: 18px;
+    }
+
+    &__date {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+      flex-shrink: 0;
+      line-height: 18px;
+    }
+
+    &__cat {
+      margin-left: auto;
+      font-size: 0.65rem;
+      // 显式 line-height, 避免继承父级 (默认 1.5~1.6) 导致 chip 实际高度大于预期, 撑爆 head
+      line-height: 18px;
+      padding: 0 6px;
+      border-radius: 3px;
+      background: rgba(94, 114, 228, 0.12);
+      color: var(--theme-color, #5e72e4);
+      font-weight: 500;
+      max-width: 60%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    // 标题 + 标签 同一行: 标题 flex:1 单行省略, 标签靠右、收缩, 整体不换行
+    &__body {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      min-width: 0; // flex 子项需要它才能正确触发 ellipsis
+    }
+
+    &__title {
+      flex: 1 1 auto;
+      min-width: 0;
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      font-weight: 600;
+      transition: color 0.2s ease;
+
+      // 单行省略
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    // 标签条: 纯文字 #xxx, 主题色淡化, 不抢视觉权重
+    // - 显示规则见 displayTags (与已激活 tag 去重, 上限 2 个)
+    // - 整体右对齐, 内部 tag 间用空格分隔
+    &__tags {
+      flex: 0 0 auto;
+      display: inline-flex;
+      gap: 0.3rem;
+      max-width: 50%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    &__tag {
+      font-size: 0.7rem;
+      line-height: 1;
+      color: var(--theme-color, #5e72e4);
+      opacity: 0.6;
+      font-weight: 500;
+    }
+
+    &__excerpt {
+      margin: 0.3rem 0 0;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  // ======================
+  // 列表视图: 极简一行
+  // ======================
+  .post-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .post-list__item {
+    border-bottom: 1px dashed var(--border-color, rgba(125, 125, 125, 0.18));
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  .post-list__link {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.5rem 0.4rem;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.18s ease, color 0.18s ease;
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--bg-color-secondary, rgba(94, 114, 228, 0.06));
+
+      .post-list__title {
+        color: var(--theme-color, #5e72e4);
+      }
+    }
+  }
+
+  .post-list__date {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+    font-variant-numeric: tabular-nums;
+    width: 3rem;
+  }
+
+  .post-list__title {
+    flex: 1;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    transition: color 0.18s ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .post-list__cat {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    padding: 1px 7px;
+    border-radius: 3px;
+    background: rgba(94, 114, 228, 0.12);
+    color: var(--theme-color, #5e72e4);
+    font-weight: 500;
+  }
+
+  .post-list__tag {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(125, 125, 125, 0.1);
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+    font-weight: 500;
+  }
+
+  .timeline-empty {
+    padding: 3rem 0;
+    text-align: center;
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+    font-size: 0.95rem;
+  }
+}
+
+// 暗色模式微调 (reco 主题用 html.dark)
+html.dark .timeline-mag {
+
+  .post-card {
+    background: rgba(255, 255, 255, 0.04);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      // 暗色下保留深阴影做"漂浮感", 再叠一层主题色微光
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.3),
+        0 12px 28px rgba(130, 94, 228, 0.25);
+    }
+  }
+
+  .post-card__cat,
+  .post-list__cat {
+    background: rgba(94, 114, 228, 0.2);
+  }
+
+  .post-card__tag {
+    opacity: 0.7; // 暗色背景下纯文字易糊, 稍提对比度
+  }
+
+  .post-list__tag {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .post-list__link:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .view-switcher {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  // 热力图暗色: lv0 用更深的灰, 与卡片背景 (rgba 255 0.04) 区分但不抢眼
+  // lv1..lv4 琥珀金本就有足够亮度, 暗色下无需重定义
+  .heatmap-cell {
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .heatmap-cell--lv1 { background: #5a4520; }
+  .heatmap-cell--lv2 { background: #8a6620; }
+  .heatmap-cell--lv3 { background: #c9851a; }
+  .heatmap-cell--lv4 { background: #f5a623; }
+  .heatmap-cell--blank { background: transparent; }
+  // 暗色下 future 格: 比默认 lv0 (rgba .06) 更暗, 虚线边框降低透明度
+  .heatmap-cell--future {
+    background: rgba(255, 255, 255, 0.02);
+    outline: 1px dashed rgba(255, 255, 255, 0.1);
+  }
+
+  // tooltip 暗色下背景反过来用浅, 提升对比度
+  .heatmap-tip {
+    background: rgba(245, 245, 250, 0.96);
+    color: #1f2229;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+
+    &__count { color: #c9851a; }
+    &__count--empty { color: rgba(31, 34, 41, 0.5); }
+    &__item {
+      color: rgba(31, 34, 41, 0.85);
+      &::before { color: #c9851a; }
+    }
+  }
+}
+
+// 小屏幕优化
+@media (max-width: 640px) {
+  .timeline-mag {
+    // 注意: 不能在根容器加 padding, 否则导航栏跟着缩, 只在内容子区调整
+    .timeline-header,
+    .year-section {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    // 小屏热力图: 列宽用 1fr 自动适配视口, 无需横滚
+    // 仅微调周几标签宽度, 给文本留够空间又不挤压格子区
+    .heatmap-weekdays {
+      width: 20px;
+      font-size: 0.55rem;
+    }
+
+    // 小屏月份标签同步缩字号, 避免和窄列宽下的格子比例失衡
+    .heatmap-months {
+      font-size: 0.55rem;
+    }
+
+    .timeline-header {
+      margin-top: 1.2rem;
+    }
+
+    // 小屏降级: 关闭左右两栏, 改纵向 (年份柱在窄屏上会挤压热力图到看不清)
+    //  - section 改 block 流, 左栏退化为顶部横排 header
+    //  - sticky 关掉: 移动端滚动小, sticky 反而占视口
+    //  - 年份/篇数同行排列, 字号缩小匹配窄屏密度
+    .year-section {
+      display: block;
+    }
+    .year-aside {
+      position: static;
+      width: auto;
+      flex: none;
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      margin-bottom: 0.7rem;
+      padding-top: 0;
+    }
+    .year-aside__year {
+      font-size: 1.4rem;
+    }
+    .year-aside__divider {
+      width: 18px;
+      margin: 0 0.1rem;
+      align-self: center;
+    }
+    .year-aside__count-num {
+      font-size: 1rem;
+    }
+
+    // 4 列降为 2 列, 仍保留卡片网格感
+    .card-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+
+    .post-list__date {
+      width: 2.6rem;
+    }
+  }
+}

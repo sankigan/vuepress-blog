@@ -1,10 +1,5 @@
 @use './font' as *;
-
-// 时间线年份倒序排列
-.timeline-content {
-  display: flex;
-  flex-direction: column-reverse;
-}
+@use './timeline.scss' as *;
 
 // Semi Design 风格难度标签
 .page-title {
