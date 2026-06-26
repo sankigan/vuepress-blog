@@ -8,19 +8,19 @@ modules:
   - Footer
 bannerBrand:
   bgImage: /bg.svg
-  title: Sanki's Blog
+  title: '> sanki'
   description: 👋🏻 学习、记录、分享
   tagline: 等苦尽甘来那一天山河星月都做谢礼。
   buttons:
-    - text: 开始阅读
+    - text: ./read
       link: /timeline.html
-  socialLinks:
-    - { icon: 'SimpleIconsGithub', link: 'https://github.com/sankigan' }
-    - { icon: 'SimpleIconsLeetcode', link: 'https://leetcode.cn/u/sank1/' }
-blog:
-  socialLinks:
-    - { icon: 'SimpleIconsGithub', link: 'https://github.com/sankigan' }
-    - { icon: 'SimpleIconsLeetcode', link: 'https://leetcode.cn/u/sank1/' }
+#   socialLinks:
+#     - { icon: 'SimpleIconsGithub', link: 'https://github.com/sankigan' }
+#     - { icon: 'SimpleIconsLeetcode', link: 'https://leetcode.cn/u/sank1/' }
+# blog:
+#   socialLinks:
+#     - { icon: 'SimpleIconsGithub', link: 'https://github.com/sankigan' }
+#     - { icon: 'SimpleIconsLeetcode', link: 'https://leetcode.cn/u/sank1/' }
 features:
   - title: 过去 🌙
     details: 往事如烟逝水东，莫叹流光负初衷

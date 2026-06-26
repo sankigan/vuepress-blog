@@ -6,7 +6,7 @@ import { webpackBundler } from '@vuepress/bundler-webpack';
 
 export default defineUserConfig({
   lang: 'zh-CN',
-  title: 'Sanki\'s Blog',
+  title: '> sanki',
   description: '',
   bundler: viteBundler(),
   // bundler: webpackBundler(),
@@ -14,7 +14,7 @@ export default defineUserConfig({
     '@vicons/carbon': resolve(__dirname, 'icons'),
   },
   theme: recoTheme({
-    logo: '/logo.png',
+    logo: '/logo.jpg',
     // docsDir: './docs',
     docsBranch: 'main',
     author: 'sankigan',
@@ -29,26 +29,19 @@ export default defineUserConfig({
     navbar: [
       { text: '首页', link: '/', icon: 'Home' },
       // { text: '文章', link: '/posts.html', icon: 'Blog' },
-      {
-        text: '分类',
-        icon: 'Categories',
-        children: [
-          { text: '前端', link: '/categories/qianduan/1.html' },
-          { text: '后端', link: '/categories/houduan/1.html' },
-          { text: '算法', link: '/categories/suanfa/1.html' },
-          { text: '设计模式', link: '/categories/shejimoshi/1.html' },
-        ],
-      },
-      { text: '标签', link: '/tags/JavaScript/1', icon: 'Tag' },
       { text: '时间轴', link: '/timeline.html', icon: 'Calendar', },
+      // 分类/标签均跳总览页 (TimelineMag 全量列表 + 对应维度的 filter chip)
+      // 不再写死子菜单, 新增分类/标签无需改 config
+      { text: '分类', link: '/categories.html', icon: 'Categories' },
+      { text: '标签', link: '/tags.html', icon: 'Tag' },
       // { text: '项目', link: '/code', icon: 'Code' },
-      {
-        text: '文档',
-        icon: 'Doc',
-        children: [
-          { text: 'vuepress-reco', link: 'https://theme-reco.vuejs.press/' },
-        ],
-      },
+      // {
+      //   text: '文档',
+      //   icon: 'Doc',
+      //   children: [
+      //     { text: 'vuepress-reco', link: 'https://theme-reco.vuejs.press/' },
+      //   ],
+      // },
     ],
     // bulletin: {
     //   body: [

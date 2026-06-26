@@ -450,15 +450,29 @@
       }
     }
 
-    &--tag {
-      font-size: 0.75rem;
-      padding: 3px 10px;
-      opacity: 0.85;
-    }
+    // 注: 历史上 &--tag 曾刻意把标签 chip 做小一号 (作为"次级"维度)
+    // 现在标签/分类是平级 (在 /tags.html 标签反而是主角), 统一尺寸
+    // 保留该修饰类是为日后单独定制颜色等留扩展点
 
     &--more {
       border-style: dashed;
       color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+    }
+
+    // 锁定态: 用于 Tags/Categories 锁定页, 视觉与 active 一致但加更深的边框
+    // 表达"这是当前页面强制选中的维度, 不可取消"
+    // 注: 同时具备 .locked 和 .active, .active 已上色, 这里只调整边框/光晕和交互
+    &.locked {
+      cursor: default;
+      border-color: transparent;
+      box-shadow: 0 0 0 2px rgba(94, 114, 228, 0.18);
+
+      &:hover {
+        // 锁定 chip 不响应 hover 视觉, 避免误以为可点
+        background: var(--theme-color, #5e72e4);
+        color: #fff;
+        border-color: transparent;
+      }
     }
   }
 
@@ -849,3 +863,29 @@ html.dark .timeline-mag {
     }
   }
 }
+
+// ========================================================================
+// Tags / Categories 锁定页 - TimelineMag 顶部大标题
+// 作用范围: .vuepress/layouts/Categories.vue 锁定模式
+// 仅当 TimelineMag 传入 title/subtitle 时渲染, Timeline 主页保持原观感不变
+// ========================================================================
+.timeline-mag .timeline-header__title {
+  margin-top: 0.4rem;
+  margin-bottom: 1.6rem;
+
+  &-main {
+    margin: 0 0 0.4rem 0;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--text-color, inherit);
+  }
+
+  &-sub {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-color-sub, rgba(125, 125, 125, 0.9));
+  }
+}
+
