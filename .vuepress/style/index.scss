@@ -1,10 +1,4 @@
-@font-face {
-  font-family: 'Smiley Sans';
-  src: url('/fonts/SmileySans-Oblique.woff2') format('woff2');
-  font-weight: normal;
-  font-style: oblique;
-  font-display: swap;
-}
+@use './font' as *;
 
 // 时间线年份倒序排列
 .timeline-content {
@@ -61,6 +55,248 @@
     color: #b31515;
     background-color: #fff0f0;
     border-color: #f0b0b0;
+  }
+}
+
+// Details 折叠块：去除外边框和背景色，标题改为胶囊样式
+.custom-container.details,
+.dark .custom-container.details {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.custom-container.details > summary.custom-container-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 18px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  vertical-align: middle;
+  list-style: none;
+  user-select: none;
+  color: #0064fa;
+  background-color: #eaf5ff;
+  border-color: #cbe7fe;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    color: #0062d6;
+    background-color: #cbe7fe;
+    border-color: #98cdfd;
+  }
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  // 展开/收起箭头
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 8px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease;
+  }
+}
+
+.custom-container.details[open] > summary.custom-container-title::before {
+  transform: rotate(45deg);
+}
+
+// 缩小胶囊与代码块之间的间距
+.custom-container.details > summary.custom-container-title + div[class*='language-'] {
+  margin-top: 8px;
+}
+
+// 折叠/展开高度过渡（由上到下撑开）
+:root {
+  interpolate-size: allow-keywords;
+}
+
+.custom-container.details::details-content {
+  height: 0;
+  overflow: hidden;
+  transition:
+    height 0.3s ease,
+    content-visibility 0.3s ease allow-discrete;
+}
+
+.custom-container.details[open]::details-content {
+  height: auto;
+}
+
+.dark .custom-container.details > summary.custom-container-title {
+  color: #6fa8ff;
+  background-color: rgba(0, 100, 250, 0.16);
+  border-color: rgba(0, 100, 250, 0.32);
+
+  &:hover {
+    color: #8fbcff;
+    background-color: rgba(0, 100, 250, 0.24);
+    border-color: rgba(0, 100, 250, 0.45);
+  }
+}
+
+// ===== 代码块配色 =====
+// 浅色主题：One Light 风格
+div[class*='language-'] {
+  background-color: #fafafa;
+
+  // 行号栏与容器同底色，避免割裂
+  &.line-numbers-mode .line-numbers {
+    background-color: transparent;
+  }
+
+  code[class*='language-'],
+  pre[class*='language-'] {
+    color: #383a42 !important;
+  }
+
+  .token.comment,
+  .token.block-comment,
+  .token.prolog,
+  .token.doctype,
+  .token.cdata {
+    color: #a0a1a7;
+    font-style: italic;
+  }
+
+  .token.punctuation,
+  .token.namespace {
+    color: #383a42;
+  }
+
+  .token.tag,
+  .token.deleted {
+    color: #e45649;
+  }
+
+  .token.attr-name,
+  .token.boolean,
+  .token.number,
+  .token.constant,
+  .token.symbol,
+  .token.property {
+    color: #986801;
+  }
+
+  .token.class-name {
+    color: #c18401;
+  }
+
+  .token.function,
+  .token.function-name {
+    color: #4078f2;
+  }
+
+  .token.selector,
+  .token.important,
+  .token.atrule,
+  .token.keyword,
+  .token.builtin {
+    color: #a626a4;
+  }
+
+  .token.string,
+  .token.char,
+  .token.attr-value,
+  .token.regex,
+  .token.variable {
+    color: #50a14f;
+  }
+
+  .token.operator,
+  .token.entity,
+  .token.url {
+    color: #0184bc;
+  }
+}
+
+// 深色主题：One Dark 风格
+.dark div[class*='language-'] {
+  background-color: #282c34;
+
+  &.line-numbers-mode .line-numbers {
+    background-color: transparent;
+  }
+
+  code[class*='language-'],
+  pre[class*='language-'] {
+    color: #abb2bf !important;
+  }
+
+  .token.comment,
+  .token.block-comment,
+  .token.prolog,
+  .token.doctype,
+  .token.cdata {
+    color: #5c6370;
+    font-style: italic;
+  }
+
+  .token.punctuation,
+  .token.namespace {
+    color: #abb2bf;
+  }
+
+  .token.tag,
+  .token.deleted {
+    color: #e06c75;
+  }
+
+  .token.attr-name,
+  .token.boolean,
+  .token.number,
+  .token.constant,
+  .token.symbol,
+  .token.property {
+    color: #d19a66;
+  }
+
+  .token.class-name {
+    color: #e5c07b;
+  }
+
+  .token.function,
+  .token.function-name {
+    color: #61afef;
+  }
+
+  .token.selector,
+  .token.important,
+  .token.atrule,
+  .token.keyword,
+  .token.builtin {
+    color: #c678dd;
+  }
+
+  .token.string,
+  .token.char,
+  .token.attr-value,
+  .token.regex,
+  .token.variable {
+    color: #98c379;
+  }
+
+  .token.operator,
+  .token.entity,
+  .token.url {
+    color: #56b6c2;
   }
 }
 

@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "vuepress dev .",
     "start": "vuepress dev .",
+    "subset-font": "bash .vuepress/scripts/subset-font.sh",
+    "prebuild": "npm run subset-font",
     "build": "vuepress build .",
     "deploy": "bash deploy.sh"
   },

@@ -3,3 +3,5 @@
 node_modules
 .DS_Store
 dist
+.vuepress/.venv/
+.vuepress/style/font.scss
