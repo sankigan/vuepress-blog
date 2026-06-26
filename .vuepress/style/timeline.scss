@@ -776,10 +776,11 @@ html.dark .timeline-mag {
   .heatmap-cell--lv3 { background: #c9851a; }
   .heatmap-cell--lv4 { background: #f5a623; }
   .heatmap-cell--blank { background: transparent; }
-  // 暗色下 future 格: 比默认 lv0 (rgba .06) 更暗, 虚线边框降低透明度
+  // 暗色下 future 格: 与浅色模式对齐 (见上方 .heatmap-cell--future 注释):
+  //  - 仅用极淡背景暗示 "未到来", 不加 outline
+  //  - 之前残留的 dashed outline 在密集小格上会变成噪点, 与浅色模式 UI 不一致
   .heatmap-cell--future {
     background: rgba(255, 255, 255, 0.02);
-    outline: 1px dashed rgba(255, 255, 255, 0.1);
   }
 
   // tooltip 暗色下背景反过来用浅, 提升对比度

@@ -300,3 +300,19 @@ body,
 .theme-reco-content {
   font-family: 'Smiley Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
+
+// ===== Navbar "首页" 项 active 态修正 =====
+// reco Link.vue 使用 route.path.startsWith(item.link) 判定 active,
+// 而 "首页" 的 link 是 '/', 任何路径都以 '/' 开头, 导致首页 nav 在所有子路径下都被打上
+// .router-link-active. reco 内部 themeLocal.value.home 实际为 undefined, 其防御分支失效,
+// 配置 theme option home: '/' 也无法生效. 故由 client.js 在 body 上写 data-is-home 标记,
+// 这里用 CSS 在非首页时强行抹掉 href="/" 那条 nav item 的 active 视觉.
+body[data-is-home='false'] .navbar-links .navbar-links__item {
+  a.link[href$='/index.html'],
+  a.link[href='/'],
+  a.link[href$='/'] {
+    &.router-link-active {
+      color: inherit !important;
+    }
+  }
+}
