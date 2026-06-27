@@ -386,3 +386,21 @@ body[data-is-home='true'] {
   pointer-events: auto;
 }
 
+// ===== 文章右侧目录 (.page-catalog-container) =====
+// 仅做两件小事:
+//   1) 把主题原生 "ON THIS PAGE" 改成 "CONTENTS" (font-size: 0 隐藏原文, ::before 写入新文案);
+//   2) 整体下移一点, 与 navbar 拉开呼吸距离.
+// 不动其他主题样式, 保持原生视觉.
+.theme-container .page-catalog-container {
+  padding-top: 90px;
+
+  .tip {
+    font-size: 0; // 抹掉原文 "ON THIS PAGE"
+
+    &::before {
+      content: 'CONTENTS';
+      font-size: 14px; // 还原可读字号 (主题原生未显式声明, 这里给一个稳定值)
+    }
+  }
+}
+
