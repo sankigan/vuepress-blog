@@ -1,10 +1,27 @@
 import { defineClientConfig } from '@vuepress/client';
-import { h, onMounted, watch, nextTick } from 'vue';
+import { h, onMounted, watch, nextTick, createApp } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePageData } from 'vuepress/client';
 import DifficultyBadge from './components/DifficultyBadge.vue';
+import GlassFilterDefs from './components/GlassFilterDefs.vue';
 
 import './style/index.scss';
+
+/*
+  全局挂载一次 GlassFilterDefs:
+    - navbar 的 backdrop-filter: url(#nav-glass) 需要在 DOM 中存在一个 <filter id="nav-glass">.
+    - 该 SVG 必须挂在 body 下 (而不是某个 layout 内), 否则路由切换会卸载, navbar 会失去 filter.
+    - 不依赖主应用根的生命周期, 直接 createApp + mount 到 body.
+*/
+function mountGlassFilterDefs() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('nav-glass')) return; // 已注入
+
+  const host = document.createElement('div');
+  host.id = 'glass-filter-defs-host';
+  document.body.appendChild(host);
+  createApp(GlassFilterDefs).mount(host);
+}
 
 function createBadgeInjector(getPageData) {
   let retryTimer = null;
@@ -79,6 +96,7 @@ export default defineClientConfig({
     onMounted(() => {
       syncHomeFlag();
       inject();
+      mountGlassFilterDefs();
     });
 
     watch(

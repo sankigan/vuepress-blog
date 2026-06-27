@@ -26,9 +26,17 @@
   // 头部 (无下边框, 更轻)
   .timeline-header {
     @include timeline-content-bounds;
-    margin-top: 2rem;
+    /*
+      margin-top: 与 navbar 视觉底边再隔一段呼吸.
+      navbar 是 sticky top-0, 在文档流前 64px, 视觉上还多了 var(--mag-navbar-top) 浮岛偏移,
+      所以从 navbar 视觉底边 (= 文档流 64px 位置) 起算, 让 timeline-header 再下沉 1rem,
+      最终视觉距 navbar 底边 = var(--mag-content-safe-top) - 64px + 1rem ≈ 56px.
+      旧值 2rem (32px) 会让筛选条紧贴 navbar 胶囊底, 视觉拥挤.
+    */
+    margin-top: calc(var(--mag-content-safe-top) - var(--mag-navbar-h) + 1rem);
     // 与下方第一个 year-section 留出更大的呼吸距离, 让筛选条与时间线主体视觉分组更清晰
-    margin-bottom: 3rem;
+    // 历次调优: 2rem → 3rem → 5rem → 4rem, 5rem 偏空, 4rem 是分组感与紧凑度的平衡点
+    margin-bottom: 4rem;
   }
 
   .timeline-header__top {
@@ -63,10 +71,12 @@
   .year-aside {
     flex: 0 0 96px;          // 固定宽度, 不参与伸缩, 给右侧热力图留最大空间
     position: sticky;
-    // top 计算: reco 主题 .navbar-container 高度 h-16 (64px = 4rem), 且本身 sticky top-0.
-    //  左栏 sticky 必须躲在 navbar 下方, 否则滚动时会被 navbar 遮挡.
-    //  4rem (navbar) + 1rem (呼吸) = 5rem.
-    top: 5rem;
+    /*
+      sticky top 直接复用 navbar 安全线变量, 自动 = navbar-top + 64 + 16 = 104px.
+      旧值 5rem (80px) 只算了 navbar 自身高度 + 1rem, 没算 navbar 距顶的 var(--mag-navbar-top),
+      导致滚动时年份大字会和 navbar 胶囊视觉重叠.
+    */
+    top: var(--mag-content-safe-top);
     align-self: flex-start;  // 双保险: sticky 元素需要明确高度边界, 避免被 flex 拉伸
     // 与右栏顶部对齐:
     //  右栏首块 .heatmap-panel--inline 自带 margin-top: 0.2rem (≈3.2px),

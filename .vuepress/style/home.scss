@@ -1,0 +1,614 @@
+/* =====================================================================
+   首页 (HomeMag) 专属样式 - Strands + 打字机沉浸版 (v2)
+   设计原则:
+     - 一屏沉浸: hero 精确 100vh, 内容垂直居中, 不被 navbar 推下
+     - 深色底 + WebGL 流光, 流光占据中央视觉锚 (mask 中心轻微高斯)
+     - 巨型 title `> sanki` 走得意黑 (Smiley Sans), 末尾 caret 用下划线 `_`
+     - navbar: 全站磨砂胶囊浮岛, 居中限宽 + 距顶 18px
+   ===================================================================== */
+
+.home-mag {
+  /* hero 强制深色调色板, 不跟随主题 */
+  --hm-bg: #0a0a0a;
+  --hm-fg: #fafafa;
+  --hm-mute: #9a9a9a;
+  --hm-faint: rgba(255, 255, 255, 0.35);
+  --hm-line: rgba(255, 255, 255, 0.08);
+  --hm-accent: #ff4d2e;
+
+  /* 字体变量: display 走得意黑; mono 仅在 eyebrow 等小字使用 */
+  --hm-font-display: 'Smiley Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --hm-font-text: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --hm-font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+
+  /* 排版尺寸 */
+  --hm-fs-hero: clamp(56px, 16vw, 240px);
+  --hm-fs-eyebrow: 12px;
+  --hm-fs-body: clamp(15px, 1.05vw, 17px);
+  --hm-fs-lg: clamp(18px, 1.4vw, 22px);
+
+  --hm-gutter: clamp(20px, 5vw, 80px);
+
+  background: var(--hm-bg);
+  color: var(--hm-fg);
+  font-family: var(--hm-font-display);   /* 全站首页默认得意黑 */
+  font-size: var(--hm-fs-body);
+  line-height: 1.6;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  /* 一屏沉浸: 精确 100vh, 不留多余高度 */
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ---------- FOUC 保护 ---------- */
+.home-mag.is-pending .home-hero__inner {
+  opacity: 0;
+}
+
+/* ---------- Opening overlay ---------- */
+.home-mag__overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--hm-bg);
+  z-index: 100;
+  pointer-events: none;
+  will-change: transform;
+  animation: home-mag-overlay-fallback 0.01s ease 4s forwards;
+}
+@keyframes home-mag-overlay-fallback {
+  to {
+    transform: translateY(-100%);
+    visibility: hidden;
+  }
+}
+
+/* =====================================================================
+   Hero
+   ---------------------------------------------------------------------
+   关键点:
+     - 绝对铺满父 .home-mag (100vh), 不再用 padding-top 顶开 ——
+       navbar 浮在 hero 之上 (position:fixed/sticky), 不挤占 hero 空间;
+     - 内容 flex 居中, 占满整屏视觉重心位于正中.
+   ===================================================================== */
+.home-mag .home-hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  box-sizing: border-box;
+  /*
+    内容垂直居中: title 坐落在 hero 几何中心,
+    Strands 流光 (shader uv 中心 = hero 几何中心) 从 title 底部漫出,
+    文字与流光交融, 流光成为标题的氛围光 —— 这是原始构图的张力来源.
+    左右 gutter 保留, 上下不加 padding, 让 flex center 完全控制位置.
+  */
+  padding: 0 var(--hm-gutter);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+/* Strands 背景: 铺满 hero, 内容层 z-index:1 */
+.home-hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  /*
+    mask 让流光集中在中央, 边缘自然过渡到深底.
+    椭圆放大到 130% × 100%, 中心 50% 50%, 内圈 65% 完全可见,
+    避免上次"两侧两团光"的视觉问题 (中心被打字机标题盖住后只剩两侧).
+  */
+  -webkit-mask-image: radial-gradient(ellipse 130% 100% at 50% 50%, #000 65%, transparent 100%);
+  mask-image: radial-gradient(ellipse 130% 100% at 50% 50%, #000 65%, transparent 100%);
+}
+
+.home-hero__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  width: 100%;
+  /*
+    标题区整体右移一点, 与左侧 gutter 拉开距离, 避免顶到屏幕左边缘 ——
+    视觉上让标题坐在画面 "左 1/3" 那个黄金分割位, 而不是贴左边.
+    clamp 保证小屏 (移动端) 不会过度缩进.
+  */
+  padding-left: clamp(0px, 4vw, 64px);
+  /*
+    标题区整体下移 ~18vh: 在 flex center 基础上更激进的下推,
+    让 `> sanki` 坐到画面 ~70% 高度处, 流光在标题正下方,
+    上半圆弧露出, 下半被视口底部切开 — 像"水面浮光"的视觉.
+    transform 不影响兄弟元素布局, 也不破坏 hero 的 flex center 逻辑.
+  */
+  transform: translateY(clamp(80px, 18vh, 200px));
+}
+
+.home-hero__eyebrow {
+  font-family: var(--hm-font-mono);  /* eyebrow 保留等宽小字, 终端味 */
+  font-size: var(--hm-fs-eyebrow);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--hm-mute);
+  margin: 0 0 clamp(24px, 4vh, 56px) 0;
+}
+
+/* ---------- 主标题 (得意黑 + 打字机) ---------- */
+.home-hero__title {
+  font-family: var(--hm-font-display);  /* 得意黑 */
+  font-size: var(--hm-fs-hero);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  margin: 0 0 clamp(24px, 4vh, 48px) 0;
+  color: var(--hm-fg);
+  font-weight: 400;
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  white-space: pre;
+}
+
+/* prompt 部分 (默认 '> '): 用稍弱的颜色 */
+.home-hero__prompt {
+  color: var(--hm-faint);
+  display: inline-block;
+}
+
+/* 打字部分: 主色 */
+.home-hero__typed {
+  color: var(--hm-fg);
+  display: inline-block;
+}
+
+/* 光标: 下划线风格 `_`, blink */
+.home-hero__caret {
+  display: inline-block;
+  width: 0.5em;              /* 宽一些, 像真实下划线 */
+  height: 0.12em;            /* 扁横线 */
+  margin-left: 0.06em;
+  background: var(--hm-accent);
+  vertical-align: -0.04em;   /* 贴近字符基线下方 */
+  border-radius: 1px;
+  animation: hm-caret-blink 1.05s steps(2) infinite;
+}
+
+@keyframes hm-caret-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  50.01%, 100% {
+    opacity: 0;
+  }
+}
+
+.home-hero__subtitle {
+  font-family: var(--hm-font-display);
+  font-size: clamp(20px, 2.4vw, 36px);
+  line-height: 1.2;
+  margin: 0 0 clamp(20px, 3vh, 36px) 0;
+  color: var(--hm-fg);
+  font-weight: 400;
+  opacity: 0.92;
+}
+
+.home-hero__tagline {
+  font-family: var(--hm-font-display);
+  font-size: var(--hm-fs-lg);
+  line-height: 1.5;
+  color: var(--hm-mute);
+  margin: 0;
+  max-width: 36ch;
+}
+
+/* =====================================================================
+   响应式: 手机
+   ===================================================================== */
+@media (max-width: 600px) {
+  .home-mag {
+    --hm-gutter: 20px;
+  }
+  .home-mag .home-hero {
+    height: 100vh;
+  }
+}
+
+/* =====================================================================
+   尊重无障碍偏好
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .home-mag *,
+  .home-mag *::before,
+  .home-mag *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  .home-hero__caret {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* =====================================================================
+   Navbar 安全区 CSS 变量 (单一来源)
+   ---------------------------------------------------------------------
+   所有需要 "避开 navbar" 的元素 (内容起始位置、sticky top 偏移等),
+   都通过下面这组变量计算, 不再硬编码 rem / px.
+
+   关系图 (从视口顶往下):
+     ┌──────────────────────────────────────┐ y = 0
+     │  --mag-navbar-top (距顶留白)         │
+     ├──────────────────────────────────────┤ y = navbar-top
+     │  navbar 胶囊本体 (--mag-navbar-h)   │
+     ├──────────────────────────────────────┤ y = navbar-bottom
+     │  呼吸间隙                            │
+     ├──────────────────────────────────────┤ y = content-safe-top
+     │  内容/sticky 元素安全起始线          │
+
+   注意:
+     - --mag-navbar-h 是 reco 主题硬编码的 64px (h-16 tailwind class),
+       不可改, 否则与主题 CSS 失配.
+     - 非首页 navbar 是 sticky top: 0 (reco 默认), 视觉位置叠加了
+       一个 top 偏移; 首页是 fixed (本文件下方覆盖).
+   ===================================================================== */
+:root {
+  /*
+    距顶 48px: 让 navbar 胶囊与视口顶部有充分呼吸, 强化 "浮岛" 视觉.
+    历次调优: 18 → 24 → 36 → 48, 18 / 24 几乎不可分辨,
+    36 仍偏紧, 48 起 navbar 与页面顶部边界清晰可辨.
+    所有派生变量 (--mag-navbar-bottom / --mag-content-safe-top) 自动联动,
+    时间轴页 timeline-header / year-aside sticky top 同步下移.
+  */
+  --mag-navbar-top: 48px;
+  --mag-navbar-h: 64px;
+  --mag-navbar-bottom: calc(var(--mag-navbar-top) + var(--mag-navbar-h));
+  /* 内容/sticky 安全线 = navbar 底边 + 16px 呼吸 */
+  --mag-content-safe-top: calc(var(--mag-navbar-bottom) + 16px);
+}
+
+/* =====================================================================
+   Navbar 上方雾化遮罩 (非首页)
+   ---------------------------------------------------------------------
+   动机:
+     navbar 是 fixed/sticky 浮岛, 胶囊宽度 max 960px, 两侧留白会让下方滚动内容
+     从胶囊"侧面"穿透露出 (如标签云、筛选条等), 视觉信息冲突, 也让用户误以为
+     那些文字是 navbar 的一部分但点不到.
+
+   方案:
+     在 navbar 所在水平条带上铺一层与页面背景同色的渐变遮罩, 上实下虚,
+     让滚动到顶部的内容自然淡出. 遮罩 z-index 低于 navbar 一层, 不影响胶囊本身.
+
+   排除场景:
+     首页 (data-home-immersive='true') 不能加 —— hero 是 100vh 深色背景图,
+     白色遮罩会盖住 hero. 首页 navbar 改为 fixed 后, hero 顶部 0px 起渲染,
+     本就不存在 "下层内容穿透 navbar" 的问题.
+   ===================================================================== */
+body:not([data-home-immersive='true'])::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /*
+    覆盖到 navbar 底边再下沉 40px:
+      - 原来只下沉 8px, 雾化条总高约 100px, 渐变集中在 navbar 自身范围内,
+        进入雾化的滚动内容在还没被压浓时就已经露脸, 视觉遮挡力弱.
+      - 现在下沉 40px, 整条延伸到 navbar 底以下 40px, 下半渐变拉长,
+        滚动内容进入雾化带后有更长一段过渡, 不再"突然冒出来".
+  */
+  height: calc(var(--mag-navbar-bottom) + 40px);
+  /*
+    雾化遮罩 (0.85 → 0.75 → 0) —— "保留呼吸感"版:
+      - 顶部 0.85 (而不是 0.95): navbar 上方的 "共 N 篇文章 / 卡片切换"
+        被压成"隐约可见的轮廓影子", 而不是完全消失. 保留三层空间感:
+        前 = navbar 胶囊 / 中 = 雾化层 / 后 = 页面内容,
+        避免顶部变成一条违和的"实色横板".
+      - 55% 中段 0.75: navbar 文字行所在高度浓度足够, 滚动内容透过 navbar
+        侧面 (胶囊左右两侧通透区) 时已基本不可辨认, 解决侧面穿透问题.
+      - 底部 0: 完全透明, navbar 下方 40px 软过渡, 不出现横向硬分界.
+      - 整条仍是连续渐变, 为 navbar SVG 折射 (displacement) 提供
+        从浓到淡的纵向素材, 折射出来有层次而非死白.
+  */
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.75) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;     /* 不挡点击, 下层链接仍可交互 (虽然视觉被淡化) */
+  z-index: 19;              /* reco navbar 是 z-20, 雾化条压在它下面一层 */
+}
+
+/* 暗色模式: 用深色背景做雾化 */
+.dark body:not([data-home-immersive='true'])::before,
+body.dark:not([data-home-immersive='true'])::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(28, 28, 28, 0.85) 0%,
+    rgba(28, 28, 28, 0.75) 55%,
+    rgba(28, 28, 28, 0) 100%
+  );
+}
+
+/* =====================================================================
+   全站 navbar 磨砂胶囊浮岛 (v2: 限宽居中)
+   ---------------------------------------------------------------------
+   原 reco navbar: sticky/fixed 通栏. 改成:
+     - 距顶用 --mag-navbar-top (默认 24px), 给一点呼吸
+     - 居中限宽: max-width 1200px, 左右 auto 居中
+     - 圆角胶囊, 阴影, 1px 极淡描边
+     - 磨砂: 保留主题 bg/60 + blur
+     - 首页沉浸态: 强制翻深色磨砂 (hero 是深底)
+   ===================================================================== */
+.navbar-container {
+  /*
+    浮岛: 距顶 var(--mag-navbar-top), 居中限宽.
+    max-width = 1100px: 与时间轴正文 (timeline-content-bounds) 对齐,
+      让 navbar 胶囊左右边和正文卡片完美同线, 视觉上形成"列".
+    定位:
+      - 主题默认给的是 left:0 / right:0 (满宽), 这里强制 left/right:0 + margin auto
+        让 max-width 在剩余空间内自然居中.
+      - 不再用 left:50% + translateX(-50%) 的伪居中:
+        translateX 会创建新的 containing block / stacking context, 干扰 backdrop-filter
+        SVG 折射的坐标取样, 宽度变化时还容易出现亚像素偏移.
+  */
+  top: var(--mag-navbar-top) !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  transform: none !important;
+  width: calc(100% - 40px) !important;
+  max-width: 1100px;
+
+  padding-left: 22px;
+  padding-right: 22px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 10px 32px rgba(0, 0, 0, 0.10);
+  /*
+    默认: 纯磨砂 (Safari/Firefox fallback, 以及首页沉浸态都走这条).
+    非首页 + Chromium 会被下面 @supports 覆盖为 url(#nav-glass) 折射版本.
+  */
+  backdrop-filter: saturate(160%) blur(18px);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 暗色模式 */
+.dark .navbar-container {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 10px 32px rgba(0, 0, 0, 0.45);
+}
+
+/* =====================================================================
+   非首页 navbar: 磨砂 + SVG 折射 (liquid glass)
+   ---------------------------------------------------------------------
+   触发条件:
+     1. body 不在首页沉浸态 (避免首页深色 hero 上叠折射, 视觉太重)
+     2. 浏览器支持 backdrop-filter: url(#...)  →  仅 Chromium 系
+        Safari / Firefox: @supports 不命中, 自动 fallback 到上面的纯 blur
+   原理:
+     - <filter id="nav-glass"> 由 GlassFilterDefs.vue 全局注入
+     - 滤镜内部对 backdrop 做 R/G/B 三通道 feDisplacementMap
+     - 三通道 scale 略有偏移 → 形成 chromatic aberration (色散), iOS 26 风格
+   注意:
+     - backdrop-filter 多值用空格分隔, url(#nav-glass) 必须靠前;
+       后面再叠 saturate + blur 进一步柔化, 避免折射出来的边过硬.
+   ===================================================================== */
+@supports (backdrop-filter: url(#nav-glass)) or (-webkit-backdrop-filter: url(#nav-glass)) {
+  body:not([data-home-immersive='true']) .navbar-container {
+    /*
+      关键: 想要"看见玻璃"的视觉, 背景必须能透过来 —— blur 必须小.
+      之前叠 blur(10px) → 视觉上就是普通磨砂, 完全感受不到折射.
+      现在 blur(2px) 仅做抗锯齿; saturate(140%) 让透过来的颜色更鲜活;
+      url(#nav-glass) 提供主视觉效果 (双向连续位移 + 色散).
+      为了避免前景导航文字跟透出的彩色背景打架,
+      用 background 半透明白 + box-shadow 的 inset 高光提升对比.
+    */
+    /*
+      彻底去掉 blur: 让背景纯粹"透"过来 —— 折射 + 色散承担全部玻璃感,
+      不再叠加任何磨砂. blur 哪怕只有 1px 也会糊掉 displacement 出来的
+      锐利位移轮廓, 反而削弱"看见玻璃"的清透感. saturate 略压到 130,
+      避免没了 blur 之后透出的颜色过艳.
+      文字可读性靠下方 .navbar-container .navbar 规则里单独的 text-shadow 兜底.
+    */
+    background: rgba(255, 255, 255, 0.28);
+    backdrop-filter: url(#nav-glass) saturate(130%);
+    -webkit-backdrop-filter: url(#nav-glass) saturate(130%);
+    /*
+      多层 inset 阴影模拟玻璃面的镜面反射:
+        - 顶部白色细线  → 高光边
+        - 外层 1px 边框 → 胶囊轮廓
+      减弱白底后, 高光仍保留但避免过白破坏透明感.
+    */
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.28) inset,
+      0 1px 0 rgba(255, 255, 255, 0.55) inset,
+      0 -1px 0 rgba(255, 255, 255, 0.1) inset,
+      0 2px 6px rgba(0, 0, 0, 0.05),
+      0 12px 36px rgba(0, 0, 0, 0.1);
+  }
+  /* 透明度变高后, 前景文字需要一点轻微的 shadow 才能在彩色背景上读清楚 */
+  body:not([data-home-immersive='true']) .navbar-container .navbar {
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6);
+  }
+  .dark body:not([data-home-immersive='true']) .navbar-container,
+  body.dark:not([data-home-immersive='true']) .navbar-container {
+    background: rgba(20, 22, 28, 0.38);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+      0 1px 0 rgba(255, 255, 255, 0.14) inset,
+      0 -1px 0 rgba(255, 255, 255, 0.03) inset,
+      0 2px 6px rgba(0, 0, 0, 0.35),
+      0 12px 36px rgba(0, 0, 0, 0.45);
+  }
+  .dark body:not([data-home-immersive='true']) .navbar-container .navbar,
+  body.dark:not([data-home-immersive='true']) .navbar-container .navbar {
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* 子容器锚点 */
+.navbar-container .navbar-links-wrapper {
+  right: 16px !important;
+}
+
+/*
+  首页沉浸态:
+    1) navbar 由 sticky 改为 fixed, 脱离布局流, 不再占据顶部 64px ——
+       这是 hero 100vh 顶部出现空白的根因.
+    2) 强制深色磨砂胶囊, 与 hero 深底协调.
+  非首页保留 sticky (主题默认行为), 跟随滚动.
+*/
+body[data-home-immersive='true'] .navbar-container {
+  position: fixed !important;
+  background-color: rgba(20, 20, 20, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 10px 32px rgba(0, 0, 0, 0.4);
+  color: #f0f0f0;
+}
+body[data-home-immersive='true'] .navbar-container,
+body[data-home-immersive='true'] .navbar-container a,
+body[data-home-immersive='true'] .navbar-container .navbar-links__item a.link {
+  color: #f0f0f0;
+}
+body[data-home-immersive='true'] .navbar-container a:hover,
+body[data-home-immersive='true'] .navbar-container .navbar-links__item a.link:hover {
+  color: #ffffff;
+}
+
+/* 移动端: 浮岛缩到几乎贴边. 同步收紧 navbar-top, 避免内容被推得太低 */
+@media (max-width: 600px) {
+  :root {
+    --mag-navbar-top: 12px;
+  }
+  .navbar-container {
+    width: calc(100% - 16px) !important;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .navbar-container .navbar-links-wrapper {
+    right: 10px !important;
+  }
+}
+
+/* =====================================================================
+   navbar 内嵌搜索框 (重塑 @vuepress/plugin-search 默认样式)
+   ---------------------------------------------------------------------
+   原默认: 2rem 高 + 完整边框 + 实色背景, 在磨砂胶囊里像贴了一块"补丁".
+   重塑目标: 与胶囊融为一体 ——
+     - 透明背景, 淡描边, 内嵌感
+     - 减小高度到 30px, 与 navbar 内行高对齐
+     - focus 时高亮主色边框
+     - 暗色 / 首页沉浸态: 描边和背景翻深, 占位字浅灰
+   ===================================================================== */
+.navbar-container .search-box {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+.navbar-container .search-box input {
+  width: 200px;
+  height: 30px;
+  padding: 0 12px 0 32px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.035);
+  background-position: 10px center;
+  background-size: 0.85rem;
+  font-size: 13px;
+  line-height: 30px;
+  color: var(--reco-text-emphasize-color, #1f1f1f);
+  transition: background 0.2s ease, border-color 0.2s ease, width 0.25s ease;
+}
+
+.navbar-container .search-box input::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.navbar-container .search-box input:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.navbar-container .search-box input:focus {
+  width: 240px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-color: var(--reco-theme-color, #ff4d2e);
+  box-shadow: 0 0 0 3px rgba(255, 77, 46, 0.12);
+}
+
+/* 暗色模式 / 首页沉浸态: 透明背景 + 浅边 */
+.dark .navbar-container .search-box input,
+body[data-home-immersive='true'] .navbar-container .search-box input {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: #f0f0f0;
+}
+
+.dark .navbar-container .search-box input::placeholder,
+body[data-home-immersive='true'] .navbar-container .search-box input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.dark .navbar-container .search-box input:hover,
+body[data-home-immersive='true'] .navbar-container .search-box input:hover {
+  background-color: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.dark .navbar-container .search-box input:focus,
+body[data-home-immersive='true'] .navbar-container .search-box input:focus {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--hm-accent);
+  box-shadow: 0 0 0 3px rgba(255, 77, 46, 0.20);
+}
+
+/* 搜索建议下拉: 与胶囊呼应 */
+.navbar-container .search-box .suggestions {
+  top: 36px;
+  border-radius: 12px;
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.10);
+}
+.dark .navbar-container .search-box .suggestions,
+body[data-home-immersive='true'] .navbar-container .search-box .suggestions {
+  background: rgba(20, 20, 20, 0.92);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+}
+
+/* 移动端搜索框收起逻辑保留, 仅微调聚焦宽度 */
+@media (max-width: 600px) {
+  .navbar-container .search-box input {
+    width: 0;
+    padding-left: 28px;
+    background-color: transparent;
+    border-color: transparent;
+  }
+  .navbar-container .search-box input:focus {
+    width: 9rem;
+    background-color: rgba(0, 0, 0, 0.06);
+    border-color: var(--reco-theme-color, #ff4d2e);
+  }
+  .dark .navbar-container .search-box input:focus,
+  body[data-home-immersive='true'] .navbar-container .search-box input:focus {
+    background-color: rgba(255, 255, 255, 0.10);
+  }
+}
