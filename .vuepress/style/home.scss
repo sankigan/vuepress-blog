@@ -101,12 +101,13 @@
   inset: 0;
   z-index: 0;
   /*
-    mask 让流光集中在中央, 边缘自然过渡到深底.
-    椭圆放大到 130% × 100%, 中心 50% 50%, 内圈 65% 完全可见,
-    避免上次"两侧两团光"的视觉问题 (中心被打字机标题盖住后只剩两侧).
+    mask 让流光自然过渡到深底, 不被硬边切断.
+    流光锚点已右移 (StrandsCanvas center-x≈0.85, 峰值约在屏幕 92% 处), 故 mask
+    中心同步右移到 90%, 让右侧完整露出、左侧渐隐到深底, 与流光走向一致.
+    椭圆放大到 130% × 100%, 内圈 70% 完全可见.
   */
-  -webkit-mask-image: radial-gradient(ellipse 130% 100% at 50% 50%, #000 65%, transparent 100%);
-  mask-image: radial-gradient(ellipse 130% 100% at 50% 50%, #000 65%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 130% 100% at 90% 50%, #000 70%, transparent 100%);
+  mask-image: radial-gradient(ellipse 130% 100% at 90% 50%, #000 70%, transparent 100%);
 }
 
 .home-hero__inner {
@@ -207,6 +208,98 @@
   max-width: 36ch;
 }
 
+/* ---------- 时间轴入口: 终端命令行风格 ----------
+   设计: 复用 hero 的 prompt(`$`) + block caret 语言, 像终端里敲一条跳转命令.
+     默认: 暗灰命令文本 + 橙红 `$` + 常驻 blink 光标.
+     hover: 文字提亮到主色, 命令下方"流光配色"下划线从左展开, `→` 右移.
+   流光配色下划线复用 Strands 的三色 (橙红/紫/青), 与背景流光呼应. */
+.home-hero__enter {
+  /* 与背景 Strands 同款三色, 作为 hover 下划线的流光 */
+  --enter-glow: linear-gradient(90deg, #ff4d2e 0%, #7c3aed 50%, #06b6d4 100%);
+  display: inline-flex;
+  /*
+    baseline 对齐: 让 `$` / 命令文本 / `→` / 下划线光标都坐在同一条文字基线上,
+    像终端里真实的一行命令 —— 之前用 center + 高竖块光标会把行高撑高, 文字看起来
+    没对齐. 改 baseline 后整行视觉重心落在基线, 自然对齐.
+  */
+  align-items: baseline;
+  gap: 0.45em;
+  width: fit-content;
+  margin-top: clamp(22px, 3.2vh, 44px);
+  padding: 0.35em 0;
+  font-family: var(--hm-font-mono);
+  font-size: var(--hm-fs-body);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--hm-mute);
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.home-hero__enter-prompt {
+  color: var(--hm-accent); /* `$` 用橙红强调色, 呼应 hero accent */
+  font-weight: 600;
+}
+
+.home-hero__enter-cmd {
+  position: relative;
+  padding-bottom: 3px;
+  /* 流光下划线: 默认宽度 0 (收起), hover 展开到满宽 */
+  background-image: var(--enter-glow);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 2px;
+  transition: background-size 0.32s ease, color 0.25s ease;
+}
+
+.home-hero__enter-arrow {
+  display: inline-block;
+  color: var(--hm-faint);
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+/* 下划线光标 `_`: 与主标题 .home-hero__caret 同款 (扁横线), 复用 blink 节奏.
+   在 baseline 对齐的 flex 行里, 空 inline-block 的基线 = 自身底边,
+   故底边自动贴到文字基线下方, 天然呈现"光标下划线"的位置. */
+.home-hero__enter-caret {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.12em;
+  background: var(--hm-accent);
+  border-radius: 1px;
+  animation: home-hero-enter-blink 1.05s steps(2) infinite;
+}
+
+@keyframes home-hero-enter-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.home-hero__enter:hover {
+  color: var(--hm-fg);
+}
+.home-hero__enter:hover .home-hero__enter-cmd {
+  background-size: 100% 2px; /* 下划线流光展开 */
+  color: var(--hm-fg);
+}
+.home-hero__enter:hover .home-hero__enter-arrow {
+  transform: translateX(5px);
+  color: var(--hm-fg);
+}
+
+/* 键盘可达: focus 高亮 */
+.home-hero__enter:focus-visible {
+  outline: 1px solid var(--hm-accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 /* =====================================================================
    响应式: 手机
    ===================================================================== */
@@ -229,7 +322,8 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
-  .home-hero__caret {
+  .home-hero__caret,
+  .home-hero__enter-caret {
     animation: none;
     opacity: 0.6;
   }
@@ -268,8 +362,83 @@
   --mag-navbar-top: 48px;
   --mag-navbar-h: 64px;
   --mag-navbar-bottom: calc(var(--mag-navbar-top) + var(--mag-navbar-h));
-  /* 内容/sticky 安全线 = navbar 底边 + 16px 呼吸 */
+  /* 内容/sticky 安全线 = navbar 底边 + 16px 呼吸 (timeline sticky 用此最小值) */
   --mag-content-safe-top: calc(var(--mag-navbar-bottom) + 16px);
+  /*
+    文章正文起始线: 在最小安全线基础上再加一段呼吸.
+    timeline 是卡片/筛选条, 贴近安全线即可; 文章页是长文阅读, 标题与 navbar
+    胶囊之间需要更舒展的留白, 故额外下沉 36px.
+  */
+  --mag-article-top: calc(var(--mag-content-safe-top) + 36px);
+}
+
+/* =====================================================================
+   非首页正文安全区 (修复 navbar 遮挡标题)
+   ---------------------------------------------------------------------
+   非首页 navbar 是 sticky top:0, 在文档流中占位 0~64px (--mag-navbar-h),
+   但浮岛把视觉位置用 top: var(--mag-navbar-top) 下推到了
+   navbar-top ~ navbar-bottom (48~112px). 而 reco 默认 .page-container 只有
+   pt-6 (24px), 正文从 64+24=88px 起, 正好落进 navbar 视觉区 (延伸到 112px),
+   导致 page-title / 首段被胶囊遮挡.
+
+   修法: 把正文起始线抬到 --mag-article-top (= 安全线 + 36px 阅读呼吸).
+   sticky 已自动让出 64px (--mag-navbar-h), 故只需补 (article-top - navbar-h)
+   的 padding-top, 替代原 pt-6. 响应式断点下 --mag-navbar-top 收紧, 本值自动联动.
+
+   首页 (data-home-immersive) 走 .home-mag 布局, 不渲染 .page-container,
+   仍加守卫以防误伤.
+   ===================================================================== */
+body:not([data-home-immersive='true']) .page-container {
+  padding-top: calc(var(--mag-article-top) - var(--mag-navbar-h)) !important;
+}
+
+/* =====================================================================
+   非首页正文宽度对齐时间轴页 (timeline-content-bounds: max-width 1100px)
+   ---------------------------------------------------------------------
+   navbar 浮岛 / 时间轴正文都是相对【整个视口】居中的 1100px 列.
+   文章页要对齐, 必须让 .page-container 也成为视口居中的 1100 框.
+
+   两个坑 (导致正文偏左 + 偏窄):
+     1. reco 给正文各块的 max-width 是 lg:max-w-screen-md / xl:max-w-screen-lg
+        (768 / 1024px), 比 1100 窄.
+     2. 有目录时 reco 给 .show-catalog .page-container 加 pr-56 (224px) 的
+        【非对称右内边距】(给 fixed 目录让位). 而正文各块用 mx-auto 是相对
+        page-container 内容盒居中的 —— 右侧被砍 224px 后, 居中基准整体左移,
+        于是正文既偏左又偏窄, 与视口居中的 navbar 对不齐.
+        (.show-series 的 pl-72 同理.)
+
+   修法:
+     a. .page-container 限宽 1100 + 左右 auto, 做成视口居中的列.
+     b. 抹掉目录/系列的非对称 padding (目录/系列都是 fixed 在左右留白区,
+        宽屏下 1100 列不与之重叠, 无需再挤压正文).
+     c. 正文各块 max-width 跟到 1100, 左右保留 1.5rem 阅读内边距 (与时间轴一致).
+   ===================================================================== */
+body:not([data-home-immersive='true']) {
+  .page-container {
+    max-width: 1100px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box;
+  }
+
+  /* 消除目录/系列对正文居中基准的非对称挤压 */
+  .show-catalog .page-container,
+  .show-series .page-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .theme-reco-default-content,
+  .page-container .page-title,
+  .page-container .page-info,
+  .page-meta,
+  .page-nav,
+  .reco-valine-wrapper,
+  .reco-vssue-wrapper {
+    max-width: 1100px !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
 }
 
 /* =====================================================================

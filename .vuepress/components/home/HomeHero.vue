@@ -20,22 +20,34 @@
     <!-- WebGL 流光背景 (绝对定位铺满 hero); 客户端按需挂载, SSR 时无 canvas -->
     <ClientOnly>
       <!--
-        centerY 单位说明: 由于 shader 把 uv 除以 uScale (=2.6),
-        hero 半高对应的 uv.y 实际只有 0.5/2.6 ≈ 0.192,
-        所以 centerY 推荐范围 [-0.19, +0.19], 超出会让流光完全离开视口.
-        -0.12: strand 中心线沉到画面 ~65% 高度处,
-        上半圆弧大部分可见, 下半圆弧大部分被视口底裁切.
+        centerY 单位说明: 由于 shader 把 uv 除以 uScale (=1.6),
+        hero 半高对应的 uv.y 实际只有 0.5/1.6 ≈ 0.31,
+        所以 centerY 推荐范围 [-0.31, +0.31], 超出会让流光完全离开视口.
+        关键: scale 同时决定弧的【振幅扫幅】—— scale 越大, 弧在屏幕上扫得越高;
+        故 scale 收小不仅让流光变小, 也让峰值不再顶到顶部, 整体收敛到右下角.
+        -0.2: strand 中心线沉到画面 ~82% 高度处 (偏下), 弧形从右下舒展升起.
+        提示: scale / center-x / center-y 三者均已支持热更新,
+        改完即时生效, 可在浏览器里直接微调到满意再定稿.
+      -->
+      <!--
+        center-x: 水平锚点 (单位 halfW). 值越大流光越往右靠:
+          0.85 → 峰值约在屏幕 92% 处, 流光右端贴右边缘、向左渐隐 (当前右对齐效果).
+          1    → 峰值正好压在右边缘 (右半弧被边缘切掉, 更"贴边"但弧形不完整).
+          0.6  → 整条弧更完整地落在画面右侧.
+        现已支持热更新: 改这个数值无需刷新即时生效 (首次加载 shader 需硬刷一次).
       -->
       <StrandsCanvas
         class="home-hero__bg"
-        :scale="2.6"
+        :scale="1.6"
         :amplitude="1.6"
         :thickness="1.2"
         :glow="2.2"
         :intensity="0.9"
         :taper="1.6"
         :speed="0.42"
-        :center-y="-0.12"
+        :span="0.7"
+        :center-y="-0.165"
+        :center-x="0.5"
       />
     </ClientOnly>
 
@@ -54,6 +66,26 @@
       <p v-if="data.subtitle" class="home-hero__subtitle">{{ data.subtitle }}</p>
 
       <p v-if="data.tagline" class="home-hero__tagline">{{ data.tagline }}</p>
+
+      <!--
+        时间轴入口 (终端命令行风格):
+          复用 hero 的 prompt / caret 视觉语言, 像在终端里敲一条跳转命令.
+          $  : 命令提示符 (橙红强调色)
+          cd ~/timeline : 命令文本, hover 时浮出流光配色下划线
+          →  : hover 右移
+          末尾常驻下划线光标 `_` blink (与主标题同款), 暗示"可执行".
+        用 RouterLink 走前端路由跳转, 不整页刷新.
+      -->
+      <RouterLink
+        class="home-hero__enter"
+        to="/timeline.html"
+        aria-label="进入时间轴"
+      >
+        <span class="home-hero__enter-prompt" aria-hidden="true">$</span>
+        <span class="home-hero__enter-cmd">cd ~/timeline</span>
+        <!-- <span class="home-hero__enter-arrow" aria-hidden="true">→</span> -->
+        <span class="home-hero__enter-caret" aria-hidden="true"></span>
+      </RouterLink>
     </div>
   </section>
 </template>
