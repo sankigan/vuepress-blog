@@ -78,8 +78,8 @@
       -->
       <RouterLink
         class="home-hero__enter"
-        to="/timeline.html"
-        aria-label="进入时间轴"
+        :to="TIMELINE_PATH"
+        aria-label="进入时间轴 (或在首页按 Enter)"
       >
         <span class="home-hero__enter-prompt" aria-hidden="true">$</span>
         <span class="home-hero__enter-cmd">cd ~/timeline</span>
@@ -92,8 +92,12 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { ClientOnly } from '@vuepress/client';
 import StrandsCanvas from './StrandsCanvas.vue';
+
+// 时间轴入口地址: RouterLink 与"按 Enter 跳转"共用, 保持单一来源.
+const TIMELINE_PATH = '/timeline.html';
 
 interface HeroData {
   eyebrow?: string;
@@ -200,8 +204,38 @@ function runLoop() {
   typingTimer = setTimeout(step, initialDelay);
 }
 
+/* ============================================================
+ *  "命令行回车" 跳转: 首页按 Enter 即执行命令, 跳转 timeline.
+ *    边界处理:
+ *      - 用户在输入框 / 文本域 / contenteditable 里打字时按 Enter 不跳转
+ *        (避免抢搜索框等控件的回车);
+ *      - 带修饰键 (Cmd/Ctrl/Alt/Shift) 的 Enter 放行给浏览器默认行为;
+ *      - 仅 Enter / NumpadEnter 触发.
+ * ============================================================ */
+const router = useRouter();
+
+function isTypingTarget(el: EventTarget | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  const tag = el.tagName;
+  return (
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'SELECT' ||
+    el.isContentEditable
+  );
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Enter') return;
+  if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+  if (isTypingTarget(e.target)) return;
+  e.preventDefault();
+  router.push(TIMELINE_PATH);
+}
+
 onMounted(() => {
   if (typeof window === 'undefined') return;
+  window.addEventListener('keydown', onKeydown);
   // reduce-motion: 不演打字也不循环, 直接整段显示
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     typedChars.value = restText.value;
@@ -213,5 +247,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   stopped = true;
   clearTyping();
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', onKeydown);
+  }
 });
 </script>
