@@ -37,9 +37,15 @@
   padding: 0;
   margin: 0;
   width: 100%;
-  /* 一屏沉浸: 精确 100vh, 不留多余高度 */
+  /*
+    一屏沉浸: 优先用 small viewport height (100svh) —— iOS Safari/Chrome
+    在 100vh 里会把地址栏算进去, 首屏底部内容被裁切; 100svh 取"地址栏展开后"
+    的最小可视高度, 不再跳动. 对不支持 svh 的旧浏览器走 100vh fallback.
+  */
   height: 100vh;
+  height: 100svh;
   min-height: 100vh;
+  min-height: 100svh;
   overflow: hidden;
   position: relative;
 }
@@ -80,6 +86,7 @@
   position: relative;
   width: 100%;
   height: 100vh;
+  height: 100svh;
   box-sizing: border-box;
   /*
     内容垂直居中: title 坐落在 hero 几何中心,
@@ -301,14 +308,87 @@
 }
 
 /* =====================================================================
-   响应式: 手机
+   响应式: 手机 (≤ 640px, 与 timeline 断点保持一致)
+   ---------------------------------------------------------------------
+   关键修复点 (相对桌面):
+     1. 高度全部走 100svh: 避免 iOS 地址栏带来的 "100vh 跳动 / 内容被裁".
+     2. translateY 大幅收紧: 桌面下推 18vh 是为了让标题坐到画面 ~70% 位置
+        与流光交融, 但手机竖屏空间紧, 这个偏移会让标题贴到底部, 甚至与
+        Enter 命令行/Strands 流光重叠. 改成只下推一小段, 让 flex center
+        本身做主导.
+     3. mask 中心拉回靠中: 桌面把流光锚到右侧 90%, 利于宽屏构图; 手机竖屏
+        宽高比反转, 锚右侧会让流光几乎挤出屏外, 改回 50% 让它正常呈现.
+     4. enter 命令行触摸友好: 加大 padding 与 hit area, 去掉无意义的 hover-only
+        视觉, 改为 :active 反馈, 适配触摸交互习惯.
+     5. 标题字号继续走 clamp 公式自适应, 这里不再硬覆盖.
    ===================================================================== */
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .home-mag {
     --hm-gutter: 20px;
+    height: 100vh;
+    height: 100svh;
+    min-height: 100vh;
+    min-height: 100svh;
   }
   .home-mag .home-hero {
     height: 100vh;
+    height: 100svh;
+  }
+
+  /*
+    移动端隐藏 Strands 流光背景:
+      - 桌面下流光是构图主角, 与标题/Enter 命令行三者呼应; 但在手机竖屏:
+        a) 宽高比反转, 椭圆 mask 难找到既不被拉成全亮又不被挤到屏外的甜点;
+        b) WebGL canvas 在低端机持续耗电 / 触发掉帧;
+        c) 用户反馈\"想去掉流光\".
+      - StrandsCanvas 是 aria-hidden 的纯装饰层, 用 display: none 直接摘除
+        既释放渲染压力, 又不破坏布局 (它本身就是 position: absolute).
+  */
+  .home-hero__bg {
+    display: none;
+  }
+
+  /*
+    标题区下推大幅收紧:
+      桌面 clamp(80px, 18vh, 200px) → 移动端 clamp(0px, 4vh, 32px)
+      在 667px 短屏 (iPhone SE) 上, 18vh ≈ 120px, 直接把标题怼到画面底部.
+      4vh ≈ 27px, 留一点点偏移保留"重心下沉"的味道但不至于失衡.
+    padding-left 也归零, 让标题贴左 gutter, 内容居中由 hero flex 控制.
+  */
+  .home-hero__inner {
+    padding-left: 0;
+    transform: translateY(clamp(0px, 4vh, 32px));
+  }
+
+  /*
+    enter 命令行: 触摸目标加大, 不再展示下划线.
+      - padding 上下加到 0.6em, 整体 hit area > 44px (iOS HIG 推荐最小尺寸)
+      - 移动端没有 hover, 桌面那条三色流光下划线在手机上要么触发不到,
+        要么被截成\"半道彩虹\", 与首页冷峻命令行调性也不合 ——
+        直接清掉 background-image, 让命令行就是纯文本.
+      - :active 仅通过文字提亮做按下反馈, 不再恢复流光.
+  */
+  .home-hero__enter {
+    padding: 0.6em 0.2em;
+    margin-top: clamp(16px, 2.4vh, 32px);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .home-hero__enter .home-hero__enter-cmd {
+    background-image: none;
+    background-size: 0 0;
+  }
+  .home-hero__enter:active,
+  .home-hero__enter:active .home-hero__enter-cmd {
+    color: var(--hm-fg);
+  }
+}
+
+/* 极窄屏 (≤ 380px, 多见于 iPhone SE/小屏安卓): 标题字号再压一档 */
+@media (max-width: 380px) {
+  .home-mag {
+    /* 顶层 clamp 已是 56px 起步, 但 56px 在 320 宽下 "> sanki" 仍会
+       严重换行, 把下限再压到 40px, 给短屏留呼吸 */
+    --hm-fs-hero: clamp(40px, 14vw, 96px);
   }
 }
 
@@ -659,8 +739,9 @@ body[data-home-immersive='true'] .navbar-container .navbar-links__item a.link:ho
   color: #ffffff;
 }
 
-/* 移动端: 浮岛缩到几乎贴边. 同步收紧 navbar-top, 避免内容被推得太低 */
-@media (max-width: 600px) {
+/* 移动端: 浮岛缩到几乎贴边. 同步收紧 navbar-top, 避免内容被推得太低
+   断点统一到 640px (与 timeline.scss 一致, 避免 600~640 之间出现样式断层) */
+@media (max-width: 640px) {
   :root {
     --mag-navbar-top: 12px;
   }
@@ -763,8 +844,8 @@ body[data-home-immersive='true'] .navbar-container .search-box .suggestions {
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
 }
 
-/* 移动端搜索框收起逻辑保留, 仅微调聚焦宽度 */
-@media (max-width: 600px) {
+/* 移动端搜索框收起逻辑保留, 仅微调聚焦宽度 (断点对齐 640px) */
+@media (max-width: 640px) {
   .navbar-container .search-box input {
     width: 0;
     padding-left: 28px;

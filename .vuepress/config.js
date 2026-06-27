@@ -24,7 +24,13 @@ export default defineUserConfig({
     repo: 'https://github.com/sankigan',
     docsRepo: 'https://github.com/sankigan/vuepress-blog',
     head: [
-      ['link', { rel: 'icon', href: 'favicon.ico' }]
+      ['link', { rel: 'icon', href: 'favicon.ico' }],
+      // Safari 顶部状态栏 / 底部工具栏的背景色跟随该 meta;
+      // 不设的话会回退到 <body> 默认白底, 在首页黑底场景下出现\"上下白条\".
+      // 0a0a0a 与首页 --hm-bg 保持一致, 暗色主题的视觉边界更连续.
+      ['meta', { name: 'theme-color', content: '#0a0a0a' }],
+      // iOS Safari 全屏 / PWA 状态栏样式 (黑底白字)
+      ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }],
     ],
     navbar: [
       { text: '首页', link: '/', icon: 'Home' },

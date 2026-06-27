@@ -317,3 +317,72 @@ body[data-is-home='false'] .navbar-links .navbar-links__item {
     }
   }
 }
+
+// ===== 首页态: html/body 同步黑底 =====
+// Safari 顶部地址栏下方 / 底部工具栏上方的"弹性安全区" (rubber band)
+// 不会被任意子元素的背景填充, 只会显示 <body> 的实际背景色.
+// 默认主题 body 是白色, 首页虽然 .home-mag 是黑底, 但安全区仍是白条,
+// 形成视觉割裂. 这里只在首页态把 html/body 也置黑, 离开首页自动还原.
+// 注意只能用 data-is-home 限定, 避免污染文章页阅读体验.
+html:has(body[data-is-home='true']),
+body[data-is-home='true'] {
+  background-color: #0a0a0a;
+}
+
+// ===== 移动端右上角"三个点"抽屉面板 (.mobile-menus-container) =====
+// 主题默认: fixed inset:0, 白底 + Tailwind utility, 与首页冷峻命令行调性割裂;
+// 且因为它常驻 DOM (只是 translate-y(-100%) 出屏), iOS Safari 一旦合成过该层,
+// 关闭后顶部状态栏 / 底部工具栏的弹性安全区会拿到它的白底, 出现\"白条复现\".
+//
+// 这里做三件事:
+//   1) 关闭态强制 visibility: hidden + pointer-events: none, 让 Safari 把这层
+//      从合成 / 命中测试里彻底摘掉, 避免它的背景污染 rubber band 安全区;
+//   2) 重绘面板视觉: 黑底 + 命令行字体 + 暗灰分隔线, 与首页 hero / timeline 同源;
+//   3) Appearance 卡片块也同步暗色, 避免上下两块色温撕裂.
+//
+// 注意:
+//   - 不用 display: none 是为了保留 translate-y 的 transition 平滑出入场;
+//     visibility 切换在 transition-end 时机由主题自带的 transition-all 兜住.
+//   - 强限定 .theme-container .mobile-menus-container 提升特异性, 覆盖 @apply.
+.theme-container .mobile-menus-container {
+  // ① 关闭态: 从合成层摘除 (打开时 .mobile-menus--active 由主题加 translate-y-0)
+  visibility: hidden;
+  pointer-events: none;
+
+  // ② 视觉对齐首页色板
+  background-color: #0a0a0a !important;
+  color: #fafafa;
+  font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+
+  .navbar-links {
+    .navbar-links__item {
+      // 主题已用 @apply border-basic-bottom 在 item 上挂了 1px 分隔线
+      // (颜色源自浅色调色板, 与暗底不和谐).
+      // 这里只覆盖颜色, 不再追加 border 到 a.link, 否则会叠成两条线.
+      border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+
+      a.link {
+        color: rgba(255, 255, 255, 0.85) !important;
+
+        &.router-link-active {
+          color: #ff4d2e !important;
+        }
+      }
+    }
+  }
+
+  // Appearance 暗黑模式切换块
+  .appearance {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.85);
+    border-radius: 12px;
+  }
+}
+
+// 打开态: 恢复可见 + 命中
+.theme-container.mobile-menus--active .mobile-menus-container {
+  visibility: visible;
+  pointer-events: auto;
+}
+

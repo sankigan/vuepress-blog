@@ -180,18 +180,24 @@
   }
 
   // 周几标签竖排 (只标 Mon/Wed/Fri, 与 GitHub 一致, 减少视觉噪音)
-  // 尺寸基准: 行高跟随 .heatmap-grid 的行高 (16px), 与格子矩阵保持垂直对齐
+  // 尺寸基准: 行高跟随 .heatmap-grid (用 1fr 等分), 自动对齐到格子行
+  // ---------------------------------------------------------------------
+  // 之前用 repeat(7, 16px) 把行高写死, 移动端 .heatmap-cell 改为
+  // aspect-ratio 后, 实际行高远小于 16px, 周几文字就和格子错位.
+  // 用 1fr 让 weekdays 拉伸到与父容器同高, 内部行随热力图行同步.
+  // align-self: stretch 配合外层 flex 让它吃满 grid-wrap 的高度.
   .heatmap-weekdays {
     flex-shrink: 0;
+    align-self: stretch;
     display: grid;
-    grid-template-rows: repeat(7, 16px);
+    grid-template-rows: repeat(7, 1fr);
     gap: 2px;
     // 顶部对齐到月标签下方 (月标签高 ~14px + 4px gap)
     padding-top: 18px;
     font-size: 0.62rem;
     color: var(--text-color-sub, rgba(125, 125, 125, 0.65));
     font-variant-numeric: tabular-nums;
-    line-height: 16px;
+    line-height: 1;
     text-align: right;
     width: 22px;
   }
@@ -224,20 +230,34 @@
     }
   }
 
-  // 格子矩阵: 53 列 1fr 弹性, 7 行固定 12px (高度保持 GitHub 经典感)
-  // 列宽 = (容器宽 - 52 * 2px gap) / 53 ≈ 18~20px (取决于卡片网格实际宽度)
-  // 行高固定 16px → 格子比例 ≈ 1.1:1, 接近正方形, 视觉更接近 GitHub 经典感
-  // 总高度 = 7*16 + 6*2 = 124px, 比之前的 96px 略高但仍紧凑
+  // 格子矩阵: 53 列 1fr 弹性, 7 行高度跟随列宽自适应 (近正方形)
+  // ---------------------------------------------------------------------
+  // 之前: 行高写死 16px. 桌面下列宽 ≈ 18~20px, 比例 1.1:1 OK;
+  //       但移动端窄屏列宽被压到 5~8px, 而行高仍 16px → 格子变成又窄又高的
+  //       "竖条", 看着像被挤扁, 这就是用户反馈的"小格子被挤压".
+  // 现在: 用 minmax(0, 1fr) 让行高也参与弹性, 并通过 aspect-ratio 锁定单元格
+  //       接近正方形 (见 .heatmap-cell), 不论列宽多窄, 格子始终保持正方形比例.
+  // 兼容: aspect-ratio 现代浏览器普遍支持 (Chrome 88+, Safari 15+, Firefox 89+),
+  //       老浏览器没有 aspect-ratio 时, 因为没显式 height, 单元格会塌成 0,
+  //       不会引起布局炸裂 —— 这种环境下视觉降级可接受 (热力图是辅助 UI).
   .heatmap-grid {
     display: grid;
-    grid-template-columns: repeat(53, 1fr);
-    grid-template-rows: repeat(7, 16px);
+    grid-template-columns: repeat(53, minmax(0, 1fr));
+    grid-auto-rows: minmax(0, auto);
     gap: 2px;
   }
 
   // 单元格: 默认底色 lv0, lv1..lv4 用琥珀金渐深
-  // 不再固定 width/height: 完全由父 grid 的列宽 + 12px 行高决定
+  // 宽度: 由 grid 列 1fr 决定; 高度: 由 aspect-ratio: 1 跟随宽度, 始终正方形
+  // ---------------------------------------------------------------------
+  // 移动端关键修复点: 没有 aspect-ratio 时, 窄屏 5~8px 列宽 × 固定 16px 行高
+  // 会让格子被纵向拉成竖条; 加上后无论 5px 还是 20px, 都保持 1:1 比例.
+  // max-height 兜底: 在极宽屏 (≥ 1600px) 时, 单格列宽可能达到 25px+,
+  // 让正方形热力图整体太占高度; 加 max-height 14px 把格子封顶, 既保留紧凑
+  // 又允许移动端自由缩小到接近列宽.
   .heatmap-cell {
+    aspect-ratio: 1 / 1;
+    max-height: 14px;
     border-radius: 2px;
     background: rgba(125, 125, 125, 0.1);
     transition: transform 0.12s ease, outline-color 0.12s ease;
@@ -818,20 +838,62 @@ html.dark .timeline-mag {
       padding-right: 1rem;
     }
 
-    // 小屏热力图: 列宽用 1fr 自动适配视口, 无需横滚
-    // 仅微调周几标签宽度, 给文本留够空间又不挤压格子区
+    // 小屏热力图: 列宽用 1fr 自动适配, 格子靠 aspect-ratio 保持正方形
+    // ---------------------------------------------------------------------
+    // 用户反馈: 移动端格子被挤压成竖条 → 已在 .heatmap-cell 加 aspect-ratio: 1
+    // 这里继续做窄屏专项优化:
+    //   1. 周几/月份字号再压一档, 给小格子让出空间
+    //   2. 周几标签宽度收到 18px, gap 收到 4px, 把 weekdays 区域再压缩
+    //   3. 格子 gap 从 2px 收到 1px, 让 ~5px 列宽下相邻格子不被 gap 吃掉一半
+    //   4. 解除桌面 max-height 14px 上限, 改为 12px (窄屏列宽天然 < 12px,
+    //      上限放宽不影响; 但能防止极窄列宽下 max-height 反而强制拉高)
+    .heatmap-panel__body {
+      gap: 4px;
+    }
     .heatmap-weekdays {
-      width: 20px;
+      width: 18px;
       font-size: 0.55rem;
     }
-
-    // 小屏月份标签同步缩字号, 避免和窄列宽下的格子比例失衡
     .heatmap-months {
       font-size: 0.55rem;
+    }
+    .heatmap-grid,
+    .heatmap-months {
+      gap: 1px;
+    }
+    .heatmap-cell {
+      max-height: 12px;
+      border-radius: 1.5px;
+      outline-width: 1px;
+      // 触屏没有真正的 hover, scale 反而会在 tap 后短暂粘连;
+      // 且窄屏小格子放大 1.12 容易盖住相邻格子, 干扰视觉
+      &:hover {
+        transform: none;
+        outline-color: transparent;
+      }
+    }
+
+    // tooltip 在触摸设备上无法跟随 hover 触发, 且占视口面积大;
+    // 隐藏避免触摸时残留状态
+    .heatmap-tip {
+      display: none !important;
     }
 
     .timeline-header {
       margin-top: 1.2rem;
+    }
+
+    // 视图切换器/筛选条间距收紧, 给手机更紧凑的顶部信息密度
+    .timeline-header__top {
+      gap: 0.6rem;
+      margin-bottom: 0.8rem;
+    }
+    .view-switcher__btn {
+      padding: 6px 10px;  // 触摸最小目标
+    }
+    .filter-chip {
+      padding: 6px 12px;  // 同上, 增大可点区
+      font-size: 0.78rem;
     }
 
     // 小屏降级: 关闭左右两栏, 改纵向 (年份柱在窄屏上会挤压热力图到看不清)
