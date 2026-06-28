@@ -30,7 +30,7 @@
               <rect x="1" y="9" width="6" height="6" rx="1.2" fill="currentColor" />
               <rect x="9" y="9" width="6" height="6" rx="1.2" fill="currentColor" />
             </svg>
-            <span>卡片</span>
+            <span class="sr-only">卡片</span>
           </button>
           <button
             class="view-switcher__btn"
@@ -45,7 +45,7 @@
               <rect x="1" y="7" width="14" height="2" rx="1" fill="currentColor" />
               <rect x="1" y="12" width="14" height="2" rx="1" fill="currentColor" />
             </svg>
-            <span>列表</span>
+            <span class="sr-only">列表</span>
           </button>
         </div>
       </div>
@@ -159,6 +159,22 @@
       </div>
     </header>
 
+    <!-- Pinned 置顶区:
+         - 数据源: frontmatter.sticky > 0 的 page (含 blogs/README.md 这类目录索引页)
+         - 仅在通用 Timeline 主页展示 (锁定页 pinnedPosts 已为空, v-if 自动跳过)
+         - 视觉: 不参与年份分组, 始终钉在顶部; 用文件夹形式呈现, 点击展开后露出 1~3 张纸,
+                 每张纸 = 一篇 pinned 文章, 点击跳转 -->
+    <section
+      v-if="pinnedPosts.length"
+      class="pinned-section pinned-section--folder"
+    >
+      <PinnedFolder
+        :color="folderColor"
+        :size="1.3"
+        :items="folderItems"
+      />
+    </section>
+
     <!-- 按年份分段的卡片网格 (热力图作为每年的"小结/封面"内嵌在年份标题下方) -->
     <section
       v-for="group in filteredGroups"
@@ -240,7 +256,15 @@
           :key="post.path"
           :to="post.path"
           class="post-card"
+          :class="getDifficulty(post) ? [`post-card--diff-${getDifficulty(post)!.level}`] : []"
         >
+          <!-- 右下角巨型字母水印 (E/M/H), 渐变填充, 纯装饰 -->
+          <span
+            v-if="getDifficulty(post)"
+            class="post-card__wm-letter"
+            aria-hidden="true"
+          >{{ getDifficulty(post)!.label.charAt(0).toUpperCase() }}</span>
+
           <div class="post-card__head">
             <span class="post-card__date">{{ post.date }}</span>
             <span
@@ -276,6 +300,11 @@
         >
           <RouterLink :to="post.path" class="post-list__link">
             <span class="post-list__date">{{ post.date }}</span>
+            <span
+              v-if="getDifficulty(post)"
+              class="difficulty-tag difficulty-tag--dot"
+              :class="`difficulty-tag--${getDifficulty(post)!.level}`"
+            >{{ getDifficulty(post)!.label }}</span>
             <span class="post-list__title">{{ post.title }}</span>
             <span
               v-for="cat in displayCats(post)"
@@ -326,6 +355,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useExtendPageData } from '@vuepress-reco/vuepress-plugin-page/composables';
 import { formatISODate } from '@utils/other.js';
+import PinnedFolder, { type FolderItem } from './PinnedFolder.vue';
 
 type ViewMode = 'card' | 'list';
 // 视图模式 localStorage key 前缀; 实际 key 形如 'timeline:view-mode:<scope>'
@@ -618,9 +648,49 @@ const visibleTags = computed<string[]>(() => {
   return head;
 });
 
+// ============================================================
+// Pinned (置顶) 文章
+// ------------------------------------------------------------
+// 来源: frontmatter.sticky 为真值的 page (含 blogs/README.md 这类目录索引页)
+// 行为:
+//   - 仅在"通用 Timeline 主页"展示 (锁定页 /tags/xxx /categories/xxx 不出 Pinned 区,
+//     因为那是垂直主题的上下文, 全局置顶塞进去会喧宾夺主)
+//   - 从主时间流 (filteredPosts) 中剔除, 不进年份分组、不进热力图统计
+//   - 排序: sticky 数值降序 (数字越大越靠前), 同值按 rawDate 降序
+//     约定: sticky 可以是 true (=1) 或正整数; 0/false/未设 视为非置顶
+// ============================================================
+const stickyWeight = (p: PostLite): number => {
+  const v = p.frontmatter?.sticky;
+  if (v === true) return 1;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+
+const isLockedView = computed<boolean>(
+  () => Boolean(props.lockedTag || props.lockedCategory),
+);
+
+const pinnedPosts = computed<PostLite[]>(() => {
+  if (isLockedView.value) return [];
+  return normalizedPosts.value
+    .filter((p) => stickyWeight(p) > 0)
+    .sort((a, b) => {
+      const sw = stickyWeight(b) - stickyWeight(a);
+      if (sw !== 0) return sw;
+      return b.rawDate.getTime() - a.rawDate.getTime();
+    });
+});
+
+// 主时间流中需要剔除的 path 集合 (pinned 不重复出现在年份分组里)
+const pinnedPathSet = computed<Set<string>>(
+  () => new Set(pinnedPosts.value.map((p) => p.path)),
+);
+
 // 应用筛选
 const filteredPosts = computed<PostLite[]>(() => {
   return normalizedPosts.value.filter((p) => {
+    // pinned 文章不进主时间流 (热力图/年份分组/总数统计都基于 filteredPosts)
+    if (pinnedPathSet.value.has(p.path)) return false;
     if (activeCategory.value) {
       const cats: string[] = p.frontmatter.categories || [];
       if (!cats.includes(activeCategory.value)) return false;
@@ -646,7 +716,9 @@ const filteredGroups = computed<YearGroup[]>(() => {
     .map(([year, data]) => ({ year, data }));
 });
 
-const totalCount = computed(() => filteredPosts.value.length);
+// 总数包含 pinned, 让用户在顶部摘要里看到的"共 X 篇"语义保持稳定
+// (pinned 仅是展示位置改变, 仍属于站点内容)
+const totalCount = computed(() => filteredPosts.value.length + pinnedPosts.value.length);
 
 const yearSpan = computed(() => {
   const years = filteredGroups.value.map((g) => Number(g.year));
@@ -852,6 +924,39 @@ const displayCats = (post: PostLite): string[] => {
   return filtered.slice(0, DISPLAY_CAT_LIMIT);
 };
 
+// ============================================================
+// Pinned 文件夹相关辅助
+// ============================================================
+
+// 把日期转成英文短格式, 例如 'JUN 29, 2026', 用于文件夹纸张顶部 kicker
+const EN_MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+const formatEnDate = (d: Date): string => {
+  if (!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
+  return `${EN_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+};
+
+// 文件夹主色: 复用主题色变量 (:root 已注入), SSR/取不到时退化到品牌紫
+// 注: getComputedStyle 仅浏览器有效; SSR 阶段返回固定值, 挂载后 computed 会自动重算
+const folderColor = computed<string>(() => {
+  if (typeof window === 'undefined') return '#5e72e4';
+  const v = getComputedStyle(document.documentElement)
+    .getPropertyValue('--theme-color')
+    .trim();
+  return v || '#5e72e4';
+});
+
+// 把 pinnedPosts 映射成 Folder 的 paper 数据 (最多 3 张, 超出截断)
+// 注: 这里只截断不补位, 实际有几篇就传几条, 由 PinnedFolder 内部按数量决定布局
+const folderItems = computed<FolderItem[]>(() =>
+  pinnedPosts.value.slice(0, 3).map((p) => ({
+    title: p.title,
+    path: p.path,
+    dateLabel: formatEnDate(p.rawDate),
+    excerpt: p.excerpt,
+    cat: (p.frontmatter.categories || [])[0] || '',
+  })),
+);
+
 const displayTags = (post: PostLite): string[] => {
   const tags: string[] = post.frontmatter.tags || [];
   const filtered = activeTag.value
@@ -859,4 +964,25 @@ const displayTags = (post: PostLite): string[] => {
     : tags;
   return filtered.slice(0, DISPLAY_TAG_LIMIT);
 };
+
+// LeetCode 题解难度标签
+// - 仅当 frontmatter.difficulty 存在且能归一到 easy/medium/hard 时返回非空
+// - 同时兼容英文 (Easy/Medium/Hard) 和中文 (简单/中等/困难) 写法
+// - 返回值用于 v-if 判断 + 拼 class 后缀, label 直接用 frontmatter 原值, 保留大小写
+const DIFFICULTY_LEVEL_MAP: Record<string, 'easy' | 'medium' | 'hard'> = {
+  easy: 'easy',
+  medium: 'medium',
+  hard: 'hard',
+  简单: 'easy',
+  中等: 'medium',
+  困难: 'hard',
+};
+const getDifficulty = (post: PostLite): { level: 'easy' | 'medium' | 'hard'; label: string } | null => {
+  const raw = post.frontmatter.difficulty;
+  if (!raw || typeof raw !== 'string') return null;
+  const level = DIFFICULTY_LEVEL_MAP[raw.toLowerCase()] || DIFFICULTY_LEVEL_MAP[raw];
+  if (!level) return null;
+  return { level, label: raw };
+};
+
 </script>

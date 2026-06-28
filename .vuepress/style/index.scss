@@ -52,6 +52,117 @@
     background-color: #fff0f0;
     border-color: #f0b0b0;
   }
+
+  // ====== 方向 A: 点阵徽章 (Dot / Minimal 风) ======
+  // 用于: 时间轴 list 视图行内难度标识
+  // 形态: 8px 实心圆点 (难度色) + 灰色文字 (label), 去背景去边框
+  // 气质: 视觉权重极低, 像 git status 输出里的 "● 修改" 标记, 让标签"几乎消失"
+  // 让列表里真正主导视觉的是标题, 而不是行首这一坨彩色药丸
+  &--dot {
+    height: auto;
+    padding: 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none;
+    text-shadow: none;
+    gap: 5px; // .difficulty-tag 已是 inline-flex, gap 控制圆点与文字间距
+    // 文字统一灰, 不区分难度 (难度信息由圆点颜色承担)
+    color: rgba(60, 60, 60, 0.68);
+
+    // 圆点: 用 ::before 伪元素生成, 颜色由 --easy/medium/hard 提供 currentColor
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+      // 圆点颜色独立于文字, 用 CSS 变量传入难度色
+      background-color: var(--diff-dot-color, currentColor);
+      // 浅色辉光: 三层叠加, 半径/透明度递减
+      //   - 内 4px / 0.7   : 紧贴圆点的高浓度色环, 让边缘看起来"鼓"出来
+      //   - 中 10px / 0.4  : 主体光雾, 决定辉光的可见范围
+      //   - 外 18px / 0.18 : 远端淡淡晕染, 与白底融合, 形成呼吸感
+      // 白底吸光严重, 必须用高透明度 + 大半径才能压住背景, 否则视觉上等于没加
+      box-shadow:
+        0 0 4px  var(--diff-dot-glow-inner, transparent),
+        0 0 10px var(--diff-dot-glow-mid,   transparent),
+        0 0 18px var(--diff-dot-glow-outer, transparent);
+    }
+
+    // 难度色仅作用于圆点 (通过 CSS var), 文字保持灰色
+    // 同时为每种难度配套三档光晕色 (与圆点同色系 rgba, 内/中/外)
+    &.difficulty-tag--easy {
+      --diff-dot-color: #00a96b;
+      --diff-dot-glow-inner: rgba(0, 169, 107, 0.7);
+      --diff-dot-glow-mid:   rgba(0, 169, 107, 0.4);
+      --diff-dot-glow-outer: rgba(0, 169, 107, 0.18);
+    }
+    &.difficulty-tag--medium {
+      --diff-dot-color: #d99100;
+      --diff-dot-glow-inner: rgba(217, 145, 0, 0.7);
+      --diff-dot-glow-mid:   rgba(217, 145, 0, 0.4);
+      --diff-dot-glow-outer: rgba(217, 145, 0, 0.18);
+    }
+    &.difficulty-tag--hard {
+      --diff-dot-color: #e8424b;
+      --diff-dot-glow-inner: rgba(232, 66, 75, 0.7);
+      --diff-dot-glow-mid:   rgba(232, 66, 75, 0.4);
+      --diff-dot-glow-outer: rgba(232, 66, 75, 0.18);
+    }
+  }
+}
+
+// 暗色模式下方向 A 的微调:
+// - 文字色提一档亮度, 在深底上仍可读 (但仍是中性灰, 不抢戏)
+// - 圆点换成亮一档的同色系
+// - 辉光: 双层 rgba box-shadow (近强远弱), 模拟 LED 电源指示灯的光晕扩散
+//   单层实色 box-shadow 不带衰减, 视觉上会塌成"硬边", 必须用 rgba 多层叠加
+html.dark .difficulty-tag--dot {
+  color: rgba(220, 220, 220, 0.55);
+
+  &::before {
+    // 双层光晕: 内圈 4px 高亮度 (0.7) + 外圈 10px 低亮度 (0.35), 形成由近到远的渐隐
+    box-shadow:
+      0 0 4px var(--diff-dot-glow-inner, transparent),
+      0 0 10px var(--diff-dot-glow-outer, transparent);
+  }
+
+  // 圆点本色 (饱和) + 辉光色 (同色系 rgba, 内/外两档)
+  &.difficulty-tag--easy {
+    --diff-dot-color: #2ecc8a;
+    --diff-dot-glow-inner: rgba(46, 204, 138, 0.7);
+    --diff-dot-glow-outer: rgba(46, 204, 138, 0.35);
+  }
+  &.difficulty-tag--medium {
+    --diff-dot-color: #f0b333;
+    --diff-dot-glow-inner: rgba(240, 179, 51, 0.7);
+    --diff-dot-glow-outer: rgba(240, 179, 51, 0.35);
+  }
+  &.difficulty-tag--hard {
+    --diff-dot-color: #ff8d94;
+    --diff-dot-glow-inner: rgba(255, 141, 148, 0.7);
+    --diff-dot-glow-outer: rgba(255, 141, 148, 0.35);
+  }
+}
+
+// ===== 视图切换按钮 icon-only 适配 =====
+// 模板里 <span> 文字仍保留 (无障碍读屏), 但视觉上隐藏
+// 标准 .sr-only 实现: 1px clip + 绝对定位, 屏幕阅读器可读, 视觉零占位
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 // Details 折叠块：去除外边框和背景色，标题改为胶囊样式
