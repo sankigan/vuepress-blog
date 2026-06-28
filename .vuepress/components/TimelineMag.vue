@@ -538,7 +538,23 @@ const normalizedPosts = computed<PostLite[]>(() => {
         frontmatter: p.frontmatter || {},
       } as PostLite;
     })
-    .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
+    .sort((a, b) => {
+      // 1. 主排序: frontmatter.date 降序 (新的在前)
+      //    rawDate 已统一规整到天粒度, 跨天直接由它决定顺序
+      const diff = b.rawDate.getTime() - a.rawDate.getTime();
+      if (diff !== 0) return diff;
+
+      // 2. 同一天 fallback: 按 git 首次提交时间降序 (后提交的在前)
+      //    __createdTime 由 .vuepress/config.js 的 onInitialized 钩子从
+      //    page.data.git.createdTime 透传到 frontmatter, 单位 ms.
+      //    没有 git 记录 (新建未提交 / 历史缺失) 时视为 0, 排到最后.
+      //
+      //    已知局限: 同一次 commit 内的多篇文章 createdTime 完全相等,
+      //    此时回退到 Array.sort 的稳定性 (即原始 posts 的字典序), 不再额外处理.
+      const ga = Number(a.frontmatter.__createdTime) || 0;
+      const gb = Number(b.frontmatter.__createdTime) || 0;
+      return gb - ga;
+    });
 });
 
 // 计数 Map: 基于全量 normalizedPosts (不受筛选影响), 保证 chip 数字有"对比信息"

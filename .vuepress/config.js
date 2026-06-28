@@ -13,6 +13,25 @@ export default defineUserConfig({
   alias: {
     '@vicons/carbon': resolve(__dirname, 'icons'),
   },
+  // 把 @vuepress/plugin-git 注入到 page.data.git 上的"首次提交时间"透传到 frontmatter,
+  // 这样前端 (TimelineMag.vue 等) 才能在 post.frontmatter.__createdTime 里读到它,
+  // 用于"同一天文章按 git 首次提交时间排序"的 fallback.
+  //
+  // 为什么不直接读 page.data.git:
+  //   @vuepress-reco/vuepress-plugin-page 在生成 posts 时只保留了 title/frontmatter/path,
+  //   page.data.git 在打包到前端的数据里就被丢了. 借道 frontmatter 是侵入最小的传递方式.
+  //
+  // 使用 onInitialized 而非 extendsPage:
+  //   extendsPage 触发时, @vuepress/plugin-git 可能还没跑完, page.data.git 是空的.
+  //   onInitialized 在所有插件初始化完成后调用, 此时 git 数据已经就位.
+  onInitialized(app) {
+    app.pages.forEach((page) => {
+      const t = page.data?.git?.createdTime;
+      if (t != null) {
+        page.frontmatter.__createdTime = t;
+      }
+    });
+  },
   theme: recoTheme({
     logo: '/logo.jpg',
     // docsDir: './docs',
