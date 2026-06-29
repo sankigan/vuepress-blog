@@ -145,7 +145,9 @@ const main = () => {
   lines.push('## 进度概览');
   lines.push('');
   lines.push('<div class="lc-stats">');
-  lines.push(statCard('total', '总计', total, '已练习题目', 100, 'Σ'));
+  // 总计卡: 进度条改为难度堆叠条 (绿/黄/红 按实际比例拼接),
+  //   表达"难度分布"而非无意义的 100%
+  lines.push(totalCard(total, counts));
   lines.push(statCard('easy', 'Easy', counts.Easy, `占比 ${pct(counts.Easy)}%`, pct(counts.Easy), 'E'));
   lines.push(statCard('medium', 'Medium', counts.Medium, `占比 ${pct(counts.Medium)}%`, pct(counts.Medium), 'M'));
   lines.push(statCard('hard', 'Hard', counts.Hard, `占比 ${pct(counts.Hard)}%`, pct(counts.Hard), 'H'));
@@ -189,5 +191,37 @@ const statCard = (slug, label, num, sub, barPct, wm) =>
   `<div class="lc-stat__bar"><span style="width:${barPct}%"></span></div>` +
   `<div class="lc-stat__sub">${sub}</div>` +
   `</div>`;
+
+/**
+ * 生成"总计"卡: 与 statCard 同结构, 但进度条替换为难度堆叠条 (Easy/Medium/Hard 三段),
+ * 用 flex 子项的 flex-grow 按实际题数比例分配宽度, total=0 时整体置灰
+ * @param {number} total 总题数
+ * @param {{Easy:number, Medium:number, Hard:number}} counts 各难度题数
+ */
+const totalCard = (total, counts) => {
+  // total=0 时 segments 为空, 由 .lc-stat__stack 的轨道色兜底, 不至于显示空白
+  const segments = total === 0
+    ? ''
+    : ['easy', 'medium', 'hard']
+        .map((k) => {
+          const n = counts[k.charAt(0).toUpperCase() + k.slice(1)];
+          return n > 0
+            ? `<span class="lc-stat__seg lc-stat__seg--${k}" style="flex-grow:${n}" title="${k}: ${n}"></span>`
+            : '';
+        })
+        .join('');
+  const sub = total === 0
+    ? '已练习题目'
+    : `Easy ${counts.Easy} · Medium ${counts.Medium} · Hard ${counts.Hard}`;
+  return (
+    `  <div class="lc-stat lc-stat--total">` +
+    `<span class="lc-stat__wm" aria-hidden="true">Σ</span>` +
+    `<div class="lc-stat__num">${total}</div>` +
+    `<div class="lc-stat__label">总计</div>` +
+    `<div class="lc-stat__bar lc-stat__stack">${segments}</div>` +
+    `<div class="lc-stat__sub">${sub}</div>` +
+    `</div>`
+  );
+};
 
 main();

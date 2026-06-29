@@ -193,7 +193,7 @@ html.dark .difficulty-tag--dot {
   &__wm {
     position: absolute;
     right: -2px;
-    bottom: -12px;
+    bottom: -16px;
     z-index: 0;
     font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
     font-size: 4.8rem;
@@ -242,7 +242,7 @@ html.dark .difficulty-tag--dot {
   // 进度条: 轨道 + 填充, 填充宽度由内联 style 控制
   &__bar {
     margin: 12px 0 6px;
-    height: 6px;
+    height: 10px;
     border-radius: 9999px;
     background: rgba(0, 0, 0, 0.06);
     overflow: hidden;
@@ -252,6 +252,26 @@ html.dark .difficulty-tag--dot {
       height: 100%;
       border-radius: inherit;
       background: var(--lc-accent, #5e72e4);
+    }
+  }
+
+  // 难度堆叠条 (仅总计卡使用): 三段彩色拼成 100% 宽,
+  //   各段宽度按 flex-grow=题数 自动分配, 一眼看出难度分布
+  //
+  // 视觉规则: 整条共用 1 个胶囊圆角 (由父 .__bar 的 border-radius + overflow:hidden 裁出),
+  //   段本身是直角矩形, 段间用 1px 同卡背景色的细缝分隔, 形成"成组的整体"而非"独立药丸"。
+  &__stack {
+    display: flex;
+    gap: 1px;          // 段间细缝, 颜色由父卡背景透出 (浅卡=白, 总计卡=蓝)
+
+    .lc-stat__seg {
+      height: 100%;
+      // 必须显式归零: .lc-stat__bar span 基类规则给了 border-radius: inherit (= 9999px),
+      //   不覆盖会让每段都变胶囊形, 拼起来像三颗小药丸而非一根条
+      border-radius: 0;
+      &--easy { background: #00a96b; }
+      &--medium { background: #d99100; }
+      &--hard { background: #e8424b; }
     }
   }
 
@@ -281,8 +301,10 @@ html.dark .difficulty-tag--dot {
   // ===== 主卡 (总计): 实心渐变铺底 + 白字, 视觉权重最高 =====
   &--total {
     border: none;
-    background: linear-gradient(135deg, #0064fa 0%, #4f8cff 100%);
-    box-shadow: 0 6px 18px rgba(0, 100, 250, 0.28);
+    // 靛蓝渐变 (indigo 系): 比纯蓝 #0064fa 更冷更内敛, 不再压制暖色堆叠条;
+    //   比 slate 多一点蓝调质感, 不发闷; 与绿/黄/红 (色相环远端) 对比清晰但不打架。
+    background: linear-gradient(135deg, #3b5fc4 0%, #5b8def 100%);
+    box-shadow: 0 6px 18px rgba(59, 95, 196, 0.3);
 
     .lc-stat__num {
       font-size: 42px;
@@ -294,6 +316,15 @@ html.dark .difficulty-tag--dot {
       background: rgba(255, 255, 255, 0.28);
       span { background: rgba(255, 255, 255, 0.95); }
     }
+    // 堆叠条: 用原难度色 (与正文表格徽章一致, 信息含义对齐)。
+    //   蓝底降饱和后, 这套绿/黄/红不再"打架"。
+    //   宽度 88%: 接近铺满但右侧仍留出净空, 避免压住 Σ 水印的可视主体部分。
+    .lc-stat__stack {
+      width: 88%;
+      .lc-stat__seg--easy { background: #00a96b; }
+      .lc-stat__seg--medium { background: #d99100; }
+      .lc-stat__seg--hard { background: #e8424b; }
+    }
     // 主卡水印走白色半透明 (实底上渐变 clip 不可见)
     .lc-stat__wm {
       background: none;
@@ -303,7 +334,7 @@ html.dark .difficulty-tag--dot {
     }
 
     &:hover {
-      box-shadow: 0 10px 26px rgba(0, 100, 250, 0.34);
+      box-shadow: 0 10px 26px rgba(59, 95, 196, 0.38);
     }
     &:hover .lc-stat__wm { opacity: 1; }
   }
@@ -344,7 +375,9 @@ html.dark .lc-stat {
   }
 
   &--total {
-    background: linear-gradient(135deg, #0d5bd8 0%, #3f7ce0 100%);
+    // 暗色版与浅色版同色相延续 (靛蓝), 但整体压暗一档以匹配深色环境;
+    //   避免使用 #0d5bd8→#3f7ce0 这类高饱和纯蓝在暗底上发光过亮
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b5fc4 100%);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
     .lc-stat__num { color: #fff; }
     .lc-stat__wm { opacity: 1; } // 还原主卡白色水印 (避免被上面的 0.22 顶掉)
