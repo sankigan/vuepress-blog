@@ -161,9 +161,11 @@
 
     <!-- Pinned 置顶区:
          - 数据源: frontmatter.sticky > 0 的 page (含 blogs/README.md 这类目录索引页)
-         - 仅在通用 Timeline 主页展示 (锁定页 pinnedPosts 已为空, v-if 自动跳过)
+         - 仅在 /timeline.html 主页展示 (锁定页 / 总览页 pinnedPosts 已为空, v-if 自动跳过)
          - 视觉: 不参与年份分组, 始终钉在顶部; 用文件夹形式呈现, 点击展开后露出 1~3 张纸,
-                 每张纸 = 一篇 pinned 文章, 点击跳转 -->
+                 每张纸 = 一篇 pinned 文章, 点击跳转
+         - 注意: pinned 文章不会从下方年份流里剔除, 主时间流里也会按发布日期照常出现
+                 (与掘金/思否等"置顶"语义一致, 仅是额外在顶部多展示一份) -->
     <section
       v-if="pinnedPosts.length"
       class="pinned-section pinned-section--folder"
@@ -353,6 +355,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useExtendPageData } from '@vuepress-reco/vuepress-plugin-page/composables';
 import { formatISODate } from '@utils/other.js';
 import PinnedFolder, { type FolderItem } from './PinnedFolder.vue';
@@ -670,8 +673,19 @@ const isLockedView = computed<boolean>(
   () => Boolean(props.lockedTag || props.lockedCategory),
 );
 
+// Pinned 仅在"时间轴主页"展示
+// - 锁定页 (/categories/<slug> /tags/<slug>): 维度已聚焦, 再叠 Pinned 语义混乱
+// - 总览页 (/categories.html /tags.html): 页面职责是按维度浏览, Pinned 不应抢戏
+// - 仅 /timeline.html 走时间维度, 是"近期重要文章"的天然位置
+// 注: 路径写死是有意为之, 与 config.js navbar 中的 /timeline.html 对齐;
+//     若将来时间轴路径变更, 此处与 navbar 一起调整即可.
+const route = useRoute();
+const TIMELINE_PATH = '/timeline.html';
+const isTimelinePage = computed<boolean>(() => route.path === TIMELINE_PATH);
+
 const pinnedPosts = computed<PostLite[]>(() => {
   if (isLockedView.value) return [];
+  if (!isTimelinePage.value) return [];
   return normalizedPosts.value
     .filter((p) => stickyWeight(p) > 0)
     .sort((a, b) => {
@@ -681,16 +695,13 @@ const pinnedPosts = computed<PostLite[]>(() => {
     });
 });
 
-// 主时间流中需要剔除的 path 集合 (pinned 不重复出现在年份分组里)
-const pinnedPathSet = computed<Set<string>>(
-  () => new Set(pinnedPosts.value.map((p) => p.path)),
-);
-
 // 应用筛选
+// 注: pinned 文章不再从主时间流剔除, 仅"额外在 Pinned 区展示一份".
+//     - 跟主流博客/社交平台的"置顶"心智一致 (掘金/思否/微博皆然)
+//     - 年份计数、热力图格子基于 filteredPosts, 保留 pinned 才能准确反映"这一年发了多少篇"
+//     - PinnedFolder 物理上只展示前 3 张, 超出部分若被剔除会"双重消失", 见 commit 历史
 const filteredPosts = computed<PostLite[]>(() => {
   return normalizedPosts.value.filter((p) => {
-    // pinned 文章不进主时间流 (热力图/年份分组/总数统计都基于 filteredPosts)
-    if (pinnedPathSet.value.has(p.path)) return false;
     if (activeCategory.value) {
       const cats: string[] = p.frontmatter.categories || [];
       if (!cats.includes(activeCategory.value)) return false;
@@ -716,9 +727,9 @@ const filteredGroups = computed<YearGroup[]>(() => {
     .map(([year, data]) => ({ year, data }));
 });
 
-// 总数包含 pinned, 让用户在顶部摘要里看到的"共 X 篇"语义保持稳定
-// (pinned 仅是展示位置改变, 仍属于站点内容)
-const totalCount = computed(() => filteredPosts.value.length + pinnedPosts.value.length);
+// 顶部摘要的"共 X 篇": 直接用 filteredPosts.length 即可
+// (pinned 文章本身就在 filteredPosts 里, 不再单独相加, 避免双重计数)
+const totalCount = computed(() => filteredPosts.value.length);
 
 const yearSpan = computed(() => {
   const years = filteredGroups.value.map((g) => Number(g.year));
