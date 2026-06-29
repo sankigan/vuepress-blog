@@ -777,8 +777,11 @@
   // ======================
   .post-card__wm-letter {
     position: absolute;
-    right: -8px;
-    bottom: -22px;
+    // 在最初版 (right:-8px / bottom:-22px) 基础上往左上方轻挪:
+    // 水平回收 ≈ 6px (右半边不再被 overflow:hidden 裁太多),
+    // 垂直抬升 ≈ 4px, 整体仍保留\"溢出卡片边界\"的杂志光泽感.
+    right: -2px;
+    bottom: -18px;
     z-index: 0;
     font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
     font-size: 5.2rem;

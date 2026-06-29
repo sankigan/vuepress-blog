@@ -128,8 +128,8 @@ const main = () => {
   lines.push('editLink: false');
   lines.push('tags:');
   lines.push('  - LeetCode');
-  lines.push('categories:');
-  lines.push('  - 算法');
+  // 不输出 categories: 汇总页本身是\"索引\"性质, 不希望被算入任何具体分类的题目数量,
+  // 也避免在时间轴卡片右上角出现\"算法\"chip 占据本就紧张的水印空间.
   lines.push('---');
   lines.push('');
   lines.push('<!-- 本文件由 .vuepress/scripts/gen-leetcode-summary.mjs 自动生成, 请勿手动编辑 -->');

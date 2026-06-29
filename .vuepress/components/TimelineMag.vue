@@ -589,12 +589,20 @@ const normalizedPosts = computed<PostLite[]>(() => {
       // 2. 同一天 fallback: 按 git 首次提交时间降序 (后提交的在前)
       //    __createdTime 由 .vuepress/config.js 的 onInitialized 钩子从
       //    page.data.git.createdTime 透传到 frontmatter, 单位 ms.
-      //    没有 git 记录 (新建未提交 / 历史缺失) 时视为 0, 排到最后.
+      //
+      //    没有 git 记录的情况 (典型: 被 .gitignore 的自动生成页, 如 leetcode-summary.md):
+      //    fallback 取 Number.MAX_SAFE_INTEGER, 视为"最新", 排到同日所有有 git 记录文章的最前.
+      //    理由: 这类自动生成页通常是"汇总/总览/索引"性质 (sticky 也常配合开启),
+      //          语义上理应排在同日的具体文章前面; 用 0 兜底则会被压到最后, 体验反直觉.
       //
       //    已知局限: 同一次 commit 内的多篇文章 createdTime 完全相等,
       //    此时回退到 Array.sort 的稳定性 (即原始 posts 的字典序), 不再额外处理.
-      const ga = Number(a.frontmatter.__createdTime) || 0;
-      const gb = Number(b.frontmatter.__createdTime) || 0;
+      const ga = a.frontmatter.__createdTime != null
+        ? Number(a.frontmatter.__createdTime)
+        : Number.MAX_SAFE_INTEGER;
+      const gb = b.frontmatter.__createdTime != null
+        ? Number(b.frontmatter.__createdTime)
+        : Number.MAX_SAFE_INTEGER;
       return gb - ga;
     });
 });
