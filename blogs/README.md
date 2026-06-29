@@ -1,13 +1,11 @@
 ---
-title: 汇总
+title: 👋🏻 前端总结
 date: 2025-2-11
 editLink: false
 sticky: 1
 ---
 
 # Front-End Summary
-
-🌵 前端总结
 
 戒骄戒躁，不断努力，请你一定相信自己
 

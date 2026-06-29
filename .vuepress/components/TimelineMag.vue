@@ -1,7 +1,12 @@
 <template>
   <div class="timeline-mag">
     <!-- 顶部摘要：总数 + 按年统计 + 视图切换 -->
-    <header class="timeline-header">
+    <!-- has-pinned 修饰类: 下方紧跟 pinned-section 时去掉 header 的 margin-bottom,
+         避免与 pinned-section 自身的 padding-top 叠加产生大段空白 (详见 timeline.scss) -->
+    <header
+      class="timeline-header"
+      :class="{ 'timeline-header--has-pinned': pinnedPosts.length > 0 }"
+    >
       <!-- 可选大标题 (Tags/Categories 锁定页使用; Timeline 主页不传, 不渲染) -->
       <div v-if="title || subtitle" class="timeline-header__title">
         <h1 v-if="title" class="timeline-header__title-main">{{ title }}</h1>
@@ -162,18 +167,22 @@
     <!-- Pinned 置顶区:
          - 数据源: frontmatter.sticky > 0 的 page (含 blogs/README.md 这类目录索引页)
          - 仅在 /timeline.html 主页展示 (锁定页 / 总览页 pinnedPosts 已为空, v-if 自动跳过)
-         - 视觉: 不参与年份分组, 始终钉在顶部; 用文件夹形式呈现, 点击展开后露出 1~3 张纸,
-                 每张纸 = 一篇 pinned 文章, 点击跳转
          - 注意: pinned 文章不会从下方年份流里剔除, 主时间流里也会按发布日期照常出现
-                 (与掘金/思否等"置顶"语义一致, 仅是额外在顶部多展示一份) -->
+                 (与掘金/思否等"置顶"语义一致, 仅是额外在顶部多展示一份)
+         - 形态: 单一 folder, 锁定为打开态 (alwaysOpen), 纸张以扇形露在 folder 外
+                 - folder 本体不响应点击 (它是信息呈现, 不是功能控件; 收起没有信息增益)
+                 - 每张纸点击直接跳转对应文章 (标题作为纸面文字)
+                 - 不再渲染右侧卡片列表, pinned 信息完全由纸张承载 -->
     <section
       v-if="pinnedPosts.length"
-      class="pinned-section pinned-section--folder"
+      class="pinned-section pinned-section--folder-only"
     >
       <PinnedFolder
         :color="folderColor"
-        :size="1.3"
+        :size="0.9"
         :items="folderItems"
+        :total="pinnedPosts.length"
+        always-open
       />
     </section>
 
@@ -967,6 +976,9 @@ const folderItems = computed<FolderItem[]>(() =>
     cat: (p.frontmatter.categories || [])[0] || '',
   })),
 );
+
+// Pinned 区现仅渲染一个永久打开的 folder, 不再有变体/模式/目标卡片收集等逻辑
+// 历史变体 (decor / morph / overlay) 已在迭代中被废弃, 保留 PinnedFolder 内部能力以备未来扩展
 
 const displayTags = (post: PostLite): string[] => {
   const tags: string[] = post.frontmatter.tags || [];

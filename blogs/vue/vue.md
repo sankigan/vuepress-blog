@@ -2,7 +2,6 @@
 title: Vue
 date: 2025-2-13
 editLink: false
-sticky: 2
 tags:
  - Vue
 categories:
