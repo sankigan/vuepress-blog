@@ -4,12 +4,12 @@
 
 得意黑 `SmileySans-Oblique.woff2` 原文件 1.1 MB。强刷时浏览器必须重新下载，会导致"系统字体 → 得意黑"的字体跳变。
 
-本方案做了两件事，彻底消除强刷跳变：
+本方案做了两件事：
 
 1. **子集化**：只保留博客实际用到的字 + 常用字兜底，1.1 MB → 约 494 KB
-2. **base64 内联**：把子集字体直接嵌入 CSS，与样式同一请求到达，零额外字体请求
+2. **外链 + preload**：子集字体输出为独立的 `SmileySans-subset.woff2`，通过 `@font-face { src: url() }` 引用，并在 `<head>` 里 preload 提前加载。配合 `font-display: swap`，字体未到时先用系统字体兜底，不阻塞首屏文字渲染。
 
-最终用户首屏多约 500 KB（gzip 后），换来强刷也立即显示得意黑。
+> 早期版本把子集字体 base64 内联进 CSS（零额外请求、强刷无跳变），但代价是全局 CSS 被撑到 ~660 KB 且 render-blocking，严重拖慢首屏。改为外链后全局 CSS 从 gzip 539 KB 降到 ~28 KB，首屏 FCP 大幅提前；preload 把字体跳变压到几乎无感。
 
 ## 怎么用
 
@@ -40,9 +40,10 @@ npm run subset-font
 | 文件 | 用途 | 是否提交 |
 |---|---|---|
 | `subset-font.sh` | 入口脚本，处理 venv + 依赖 + 调用 py | ✅ |
-| `subset-font.py` | 核心：收集字符 + fontTools 子集化 + 写 SCSS | ✅ |
+| `subset-font.py` | 核心：收集字符 + fontTools 子集化 + 写字体文件与 SCSS | ✅ |
 | `.vuepress/public/fonts/SmileySans-Oblique.woff2` | 字体源文件，子集化的输入 | ✅ |
-| `.vuepress/style/font.scss` | 生成产物：base64 内联的 @font-face | ❌ gitignored |
+| `.vuepress/public/fonts/SmileySans-subset.woff2` | 生成产物：子集化后的字体（外链引用） | ❌ gitignored |
+| `.vuepress/style/font.scss` | 生成产物：外链引用的 @font-face | ❌ gitignored |
 | `.vuepress/.venv/` | Python 虚拟环境 | ❌ gitignored |
 
 `index.scss` 通过 `@import './font.scss'` 引入字体，这样 build 时即使产物变化也不污染源码 diff。

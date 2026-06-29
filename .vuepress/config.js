@@ -8,8 +8,24 @@ export default defineUserConfig({
   lang: 'zh-CN',
   title: '> sanki',
   description: '',
+  // 默认 VuePress 会对全站所有页面 chunk 注入 <link rel="prefetch"> (本站 ~180 个),
+  // 这些请求会在首屏 idle 时和字体 / 主 JS / 首页 WebGL 抢带宽。博客站内跳转低频,
+  // 关掉 prefetch 让首屏带宽更专注; 点击文章时再按需加载 chunk (有 HTTP 缓存, 体感可接受)。
+  shouldPrefetch: false,
   bundler: viteBundler(),
   // bundler: webpackBundler(),
+  // head 必须放在顶层 SiteConfig 才会注入到 <head>; 放在 recoTheme() 里不生效。
+  head: [
+    ['link', { rel: 'icon', href: 'favicon.ico' }],
+    // 子集化的得意黑字体改为外链 (见 scripts/subset-font.py), 不再 base64 内联进全局 CSS。
+    // 提前 preload, 让字体与首屏关键资源并行下载, 把 font-display: swap 的字体跳变压到最小。
+    // 字体请求始终走 CORS 模式, 即便同源也必须带 crossorigin, 否则 preload 命中不了实际请求。
+    ['link', { rel: 'preload', href: '/fonts/SmileySans-subset.woff2', as: 'font', type: 'font/woff2', crossorigin: '' }],
+    // Safari 顶部状态栏 / 底部工具栏的背景色跟随该 meta, 与首页 --hm-bg (#0a0a0a) 保持一致。
+    ['meta', { name: 'theme-color', content: '#0a0a0a' }],
+    // iOS Safari 全屏 / PWA 状态栏样式 (黑底白字)
+    ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }],
+  ],
   alias: {
     '@vicons/carbon': resolve(__dirname, 'icons'),
   },
@@ -42,15 +58,6 @@ export default defineUserConfig({
     authorAvatar: '/avatar.jpg',
     repo: 'https://github.com/sankigan',
     docsRepo: 'https://github.com/sankigan/vuepress-blog',
-    head: [
-      ['link', { rel: 'icon', href: 'favicon.ico' }],
-      // Safari 顶部状态栏 / 底部工具栏的背景色跟随该 meta;
-      // 不设的话会回退到 <body> 默认白底, 在首页黑底场景下出现\"上下白条\".
-      // 0a0a0a 与首页 --hm-bg 保持一致, 暗色主题的视觉边界更连续.
-      ['meta', { name: 'theme-color', content: '#0a0a0a' }],
-      // iOS Safari 全屏 / PWA 状态栏样式 (黑底白字)
-      ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }],
-    ],
     navbar: [
       { text: '首页', link: '/', icon: 'Home' },
       // { text: '文章', link: '/posts.html', icon: 'Blog' },

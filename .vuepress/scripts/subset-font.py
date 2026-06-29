@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-子集化得意黑字体并将结果 base64 内联到 .vuepress/style/index.scss 的 @font-face。
+子集化得意黑字体, 输出为独立 woff2 文件, 并生成外链引用的 .vuepress/style/font.scss。
 
 字符来源:
   1) blogs/ 下所有 .md 实际用到的字
@@ -11,11 +11,8 @@
 运行: .vuepress/.venv/bin/python .vuepress/scripts/subset-font.py
 """
 
-import base64
 import glob
 import io
-import os
-import re
 import sys
 from pathlib import Path
 
@@ -24,6 +21,9 @@ from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC_FONT = ROOT / '.vuepress/public/fonts/SmileySans-Oblique.woff2'
+# 子集字体输出为独立 woff2 文件, 走外链引用 (不再 base64 内联进 CSS),
+# 让全局 CSS 体积从 ~660KB 降到几 KB, 解除首屏 render-blocking。
+OUT_FONT = ROOT / '.vuepress/public/fonts/SmileySans-subset.woff2'
 # 生成产物: 单独的 font.scss, 由 .gitignore 排除, 不污染 index.scss diff
 FONT_SCSS = ROOT / '.vuepress/style/font.scss'
 
@@ -100,20 +100,19 @@ def subset_font(chars):
     return buf.getvalue()
 
 
-def write_font_scss(font_bytes):
-    """把子集字体 base64 编码后写入独立的 font.scss (由 index.scss @import)。"""
-    b64 = base64.b64encode(font_bytes).decode('ascii')
-    data_uri = f'data:font/woff2;base64,{b64}'
+def write_font_assets(font_bytes):
+    """写出子集 woff2 文件, 并生成外链引用的 font.scss (由 index.scss @use)。"""
+    OUT_FONT.write_bytes(font_bytes)
 
     content = (
         "// !!! 此文件由 .vuepress/scripts/subset-font.py 自动生成, 请勿手动编辑 !!!\n"
         "// 由 .gitignore 排除, build 前自动重新生成\n\n"
         "@font-face {\n"
         "  font-family: 'Smiley Sans';\n"
-        f"  src: url('{data_uri}') format('woff2');\n"
+        "  src: url('/fonts/SmileySans-subset.woff2') format('woff2');\n"
         "  font-weight: normal;\n"
         "  font-style: oblique;\n"
-        "  font-display: block;\n"
+        "  font-display: swap;\n"
         "}\n"
     )
     FONT_SCSS.write_text(content, encoding='utf-8')
@@ -133,12 +132,11 @@ def main():
     print('执行子集化...')
     out = subset_font(chars)
     out_size = len(out)
-    b64_size = len(base64.b64encode(out))
     print(f'  子集化后: {out_size/1024:.1f} KB (压缩率 {out_size*100/src_size:.1f}%)')
-    print(f'  base64 后: {b64_size/1024:.1f} KB (将内联进 SCSS)')
 
-    print('写入 font.scss...')
-    write_font_scss(out)
+    print('写入字体文件与 font.scss...')
+    write_font_assets(out)
+    print(f'  已生成 {OUT_FONT.relative_to(ROOT)}')
     print(f'  已生成 {FONT_SCSS.relative_to(ROOT)}')
     print('完成。')
 
