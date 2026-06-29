@@ -1,5 +1,5 @@
 ---
-title: DFS 和 BDS 算法
+title: DFS 和 BFS 算法
 date: 2025-2-20
 editLink: false
 tags:

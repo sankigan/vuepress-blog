@@ -150,6 +150,270 @@ html.dark .difficulty-tag--dot {
   }
 }
 
+// ===== LeetCode 汇总页: 进度概览卡片 =====
+// 由 scripts/gen-leetcode-summary.mjs 生成的 .lc-stats 容器使用。
+// 主次设计:
+//   - "总计"是主卡: 走实心渐变铺底 + 白字 + 更大字号 + 更宽栅格列, 视觉权重最高;
+//   - Easy/Medium/Hard 是从卡: 白底 + 彩色强调 + 右下角巨型字母水印 (与时间轴卡片同款),
+//     彼此同级, 与主卡形成清晰的"1 主 3 从"层级。
+// 难度配色与 .difficulty-tag / 时间轴卡片水印同源 (Semi Design 风)。
+.lc-stats {
+  display: grid;
+  // 主卡 (第一列) 更宽 → 强化主次
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0 28px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.lc-stat {
+  position: relative;
+  overflow: hidden; // 兜住溢出的水印字母
+  padding: 18px 18px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.09);
+  }
+
+  // 右下角巨型字母水印 (E/M/H/Σ), 渐变填充, 纯装饰
+  // (复用时间轴卡片 .post-card__wm-letter 的手法: background-clip:text + 低透明)
+  // 注意: 时间轴卡片很高 (~150-200px), 用 bottom:-22px 只裁掉字母一小截;
+  //   但本统计卡很矮 (~110-130px), 同样的偏移会把字母底部一大块裁掉
+  //   (E 的最下一横被吃掉 → 看着像 F)。故这里把偏移收小, 让整个字形露出,
+  //   仅保留极小出血感。字号也比时间轴 (5.2rem) 略小, 适配矮卡。
+  &__wm {
+    position: absolute;
+    right: -2px;
+    bottom: -12px;
+    z-index: 0;
+    font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+    font-size: 4.8rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    opacity: 0.16;
+    pointer-events: none;
+    user-select: none;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  &:hover &__wm {
+    opacity: 0.3;
+    transform: rotate(-4deg) translateY(-3px);
+  }
+
+  // 文本内容压在水印之上
+  &__num,
+  &__label,
+  &__bar,
+  &__sub {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__num {
+    font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--lc-accent, #1f2937);
+  }
+
+  &__label {
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(60, 60, 60, 0.7);
+  }
+
+  // 进度条: 轨道 + 填充, 填充宽度由内联 style 控制
+  &__bar {
+    margin: 12px 0 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--lc-accent, #5e72e4);
+    }
+  }
+
+  &__sub {
+    font-size: 12px;
+    color: rgba(90, 90, 90, 0.6);
+  }
+
+  // 从卡配色 + 水印渐变 (与 .difficulty-tag / 时间轴卡片同源)
+  // 注意: 必须用 background-image 而非 background 简写。
+  //   background 简写会把 background-clip 重置回 border-box, 导致基类的
+  //   background-clip:text 失效 → 渐变铺满整块 = "色块" (而非裁切到字形)。
+  //   用 background-image 只设图层, 不动 clip, 字母水印才正确显示。
+  &--easy {
+    --lc-accent: #00a96b;
+    .lc-stat__wm { background-image: linear-gradient(135deg, #00a96b 0%, #2ecc8a 60%, #66e6b0 100%); }
+  }
+  &--medium {
+    --lc-accent: #d99100;
+    .lc-stat__wm { background-image: linear-gradient(135deg, #b37300 0%, #d99100 60%, #f0b333 100%); }
+  }
+  &--hard {
+    --lc-accent: #e8424b;
+    .lc-stat__wm { background-image: linear-gradient(135deg, #b31515 0%, #e8424b 60%, #ff8d94 100%); }
+  }
+
+  // ===== 主卡 (总计): 实心渐变铺底 + 白字, 视觉权重最高 =====
+  &--total {
+    border: none;
+    background: linear-gradient(135deg, #0064fa 0%, #4f8cff 100%);
+    box-shadow: 0 6px 18px rgba(0, 100, 250, 0.28);
+
+    .lc-stat__num {
+      font-size: 42px;
+      color: #fff;
+    }
+    .lc-stat__label { color: rgba(255, 255, 255, 0.92); }
+    .lc-stat__sub { color: rgba(255, 255, 255, 0.78); }
+    .lc-stat__bar {
+      background: rgba(255, 255, 255, 0.28);
+      span { background: rgba(255, 255, 255, 0.95); }
+    }
+    // 主卡水印走白色半透明 (实底上渐变 clip 不可见)
+    .lc-stat__wm {
+      background: none;
+      -webkit-text-fill-color: rgba(255, 255, 255, 0.24);
+      color: rgba(255, 255, 255, 0.24);
+      opacity: 1;
+    }
+
+    &:hover {
+      box-shadow: 0 10px 26px rgba(0, 100, 250, 0.34);
+    }
+    &:hover .lc-stat__wm { opacity: 1; }
+  }
+
+  // 移动端 (2 列): 主卡横跨整行, 保持主次
+  @media (max-width: 640px) {
+    &--total { grid-column: 1 / -1; }
+  }
+}
+
+html.dark .lc-stat {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: none;
+
+  &:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.32);
+  }
+
+  &__num { color: var(--lc-accent, #e5e7eb); }
+  &__label { color: rgba(220, 220, 220, 0.7); }
+  &__sub { color: rgba(200, 200, 200, 0.5); }
+  &__bar { background: rgba(255, 255, 255, 0.08); }
+  &__wm { opacity: 0.22; } // 深底吸光, 略提亮一档
+
+  // 同浅色: 用 background-image 保留基类 background-clip:text, 避免渲染成色块
+  &--easy {
+    --lc-accent: #2ecc8a;
+    .lc-stat__wm { background-image: linear-gradient(135deg, #2ecc8a 0%, #5ee0a0 60%, #aef0cc 100%); }
+  }
+  &--medium {
+    --lc-accent: #f0b333;
+    .lc-stat__wm { background-image: linear-gradient(135deg, #f0b333 0%, #ffc859 60%, #ffe0a0 100%); }
+  }
+  &--hard {
+    --lc-accent: #ff8d94;
+    .lc-stat__wm { background-image: linear-gradient(135deg, #ff6b73 0%, #ff8d94 60%, #ffc0c4 100%); }
+  }
+
+  &--total {
+    background: linear-gradient(135deg, #0d5bd8 0%, #3f7ce0 100%);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    .lc-stat__num { color: #fff; }
+    .lc-stat__wm { opacity: 1; } // 还原主卡白色水印 (避免被上面的 0.22 顶掉)
+    &:hover { box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5); }
+  }
+}
+
+// ===== 正文表格: 四角圆角修复 =====
+// 主题默认 `display:block + rounded-lg + overflow-x-auto`, 内容贴边时右侧圆角
+// 会被裁进可滚动区, 视觉上"右边没有圆角"。这里改用 separate 边框模型 + 自绘外框,
+// 并对四个角的单元格单独设置圆角 (方角单元格背景会顶破外框圆角), 彻底解决。
+.theme-reco-default-content table {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+
+  // 自绘单元格分隔线 (覆盖主题的 tailwind 边框), 避免与外框/相邻格重复成双线
+  th,
+  td {
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+
+    &:not(:last-child) {
+      border-right: 1px solid rgba(0, 0, 0, 0.07);
+    }
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  // 四角单元格跟随外框圆角
+  thead tr:first-child th:first-child,
+  tr:first-child td:first-child {
+    border-top-left-radius: 11px;
+  }
+  thead tr:first-child th:last-child,
+  tr:first-child td:last-child {
+    border-top-right-radius: 11px;
+  }
+  tr:last-child td:first-child {
+    border-bottom-left-radius: 11px;
+  }
+  tr:last-child td:last-child {
+    border-bottom-right-radius: 11px;
+  }
+}
+
+html.dark .theme-reco-default-content table {
+  border-color: rgba(255, 255, 255, 0.12);
+
+  th,
+  td {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+
+    &:not(:last-child) {
+      border-right-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
 // ===== 视图切换按钮 icon-only 适配 =====
 // 模板里 <span> 文字仍保留 (无障碍读屏), 但视觉上隐藏
 // 标准 .sr-only 实现: 1px clip + 绝对定位, 屏幕阅读器可读, 视觉零占位
@@ -409,7 +673,7 @@ div[class*='language-'] {
 
 // 中文字体使用得意黑
 body,
-.theme-reco-content {
+.theme-reco-default-content {
   font-family: 'Smiley Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 

@@ -34,8 +34,11 @@ function createBadgeInjector(getPageData) {
 
     const difficulty = getPageData().value?.frontmatter?.difficulty;
 
-    // 移除可能残留的 badge
-    const existing = document.querySelector('.difficulty-tag');
+    // 移除上一篇遗留在标题里的 badge。
+    // 注意: 必须限定在 .page-title 内, 否则 document.querySelector('.difficulty-tag')
+    // 会命中正文里第一个难度徽章 (如「力扣总结」表格首行的 Easy), 把它误删,
+    // 导致汇总页第 1 题难度恒为空白。本注入器只负责文章标题徽章, 不应触碰正文。
+    const existing = document.querySelector('.page-title .difficulty-tag');
     if (existing) {
       existing.remove();
     }

@@ -5,10 +5,13 @@
   "author": "sankigan <sankigan@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "predev": "npm run gen:leetcode",
     "dev": "vuepress dev .",
+    "prestart": "npm run gen:leetcode",
     "start": "vuepress dev .",
     "subset-font": "bash .vuepress/scripts/subset-font.sh",
-    "prebuild": "npm run subset-font",
+    "gen:leetcode": "node .vuepress/scripts/gen-leetcode-summary.mjs",
+    "prebuild": "npm run subset-font && npm run gen:leetcode",
     "build": "vuepress build .",
     "deploy": "bash deploy.sh"
   },
