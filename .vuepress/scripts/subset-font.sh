@@ -2,7 +2,7 @@
 # ============================================================
 # 字体子集化入口脚本
 #   - 自动准备 Python venv 和依赖 (fontTools, brotli)
-#   - 调用 subset-font.py 完成子集化并内联进 index.scss
+#   - 调用 subset-font.py 完成子集化, 输出独立 woff2 + 外链 font.scss
 # 在 npm run build / npm run subset-font 中被调用
 # ============================================================
 
@@ -12,7 +12,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 VENV_DIR="$ROOT_DIR/.vuepress/.venv"
 PY_SCRIPT="$SCRIPT_DIR/subset-font.py"
-SRC_FONT="$ROOT_DIR/.vuepress/public/fonts/SmileySans-Oblique.woff2"
+# 源字体只作子集化输入, 放在 scripts/ 而非 public/ (避免被原样复制进 dist)。
+SRC_FONT="$SCRIPT_DIR/SmileySans-Oblique.woff2"
 
 step() { printf "\n\033[1;36m▶ %s\033[0m\n" "$*"; }
 ok()   { printf "\033[1;32m✓ %s\033[0m\n" "$*"; }
@@ -21,7 +22,7 @@ err()  { printf "\033[1;31m✗ %s\033[0m\n" "$*" >&2; }
 # 1) 检查源字体
 if [[ ! -f "$SRC_FONT" ]]; then
   err "源字体不存在: $SRC_FONT"
-  err "请把 SmileySans-Oblique.woff2 放到 .vuepress/public/fonts/ 后重试"
+  err "请把 SmileySans-Oblique.woff2 放到 .vuepress/scripts/ 后重试"
   exit 1
 fi
 

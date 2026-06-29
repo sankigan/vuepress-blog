@@ -1,4 +1,4 @@
-# 字体子集化与内联
+# 字体子集化与外链
 
 ## 是什么 / 为什么
 
@@ -41,7 +41,7 @@ npm run subset-font
 |---|---|---|
 | `subset-font.sh` | 入口脚本，处理 venv + 依赖 + 调用 py | ✅ |
 | `subset-font.py` | 核心：收集字符 + fontTools 子集化 + 写字体文件与 SCSS | ✅ |
-| `.vuepress/public/fonts/SmileySans-Oblique.woff2` | 字体源文件，子集化的输入 | ✅ |
+| `.vuepress/scripts/SmileySans-Oblique.woff2` | 字体源文件，子集化的输入（放 scripts 而非 public，避免被原样复制进 dist） | ✅ |
 | `.vuepress/public/fonts/SmileySans-subset.woff2` | 生成产物：子集化后的字体（外链引用） | ❌ gitignored |
 | `.vuepress/style/font.scss` | 生成产物：外链引用的 @font-face | ❌ gitignored |
 | `.vuepress/.venv/` | Python 虚拟环境 | ❌ gitignored |

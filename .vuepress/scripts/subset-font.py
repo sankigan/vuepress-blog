@@ -20,7 +20,8 @@ from fontTools.subset import Subsetter, Options
 from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC_FONT = ROOT / '.vuepress/public/fonts/SmileySans-Oblique.woff2'
+# 源字体只作为子集化的输入, 不放在 public/ (放 public 会被原样复制进 dist 占 1.1MB 却无人引用)。
+SRC_FONT = ROOT / '.vuepress/scripts/SmileySans-Oblique.woff2'
 # 子集字体输出为独立 woff2 文件, 走外链引用 (不再 base64 内联进 CSS),
 # 让全局 CSS 体积从 ~660KB 降到几 KB, 解除首屏 render-blocking。
 OUT_FONT = ROOT / '.vuepress/public/fonts/SmileySans-subset.woff2'
