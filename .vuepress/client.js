@@ -77,6 +77,115 @@ function createBadgeInjector(getPageData) {
   return inject;
 }
 
+const DETAILS_TITLE_SELECTOR = '.custom-container.details > summary.custom-container-title';
+
+/**
+ * Details 折叠块标题的 PillNav 风格 hover 动效增强:
+ *   1. 将 summary 纯文字包裹为 .label-stack（双层 .pill-label + .pill-label-hover）
+ *   2. 插入 .hover-circle 蒙版
+ *   3. 根据胶囊实际尺寸计算圆形直径 & transform-origin（与 PillNav 相同公式）,
+ *      通过 CSS 自定义属性传给 CSS 过渡驱动动画
+ * 返回 cleanup 函数, 路由切换时调用以移除 resize 监听。
+ */
+function enhanceDetailsHover() {
+  if (typeof document === 'undefined') return () => {};
+
+  let retryTimer = null;
+  let onResize = null;
+
+  const layout = (summaries) => {
+    summaries.forEach((summary) => {
+      const rect = summary.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      if (w === 0 || h === 0) return;
+
+      // 圆形直径需令弧线穿过胶囊顶角, 使填充呈现"从底部撑开"的弧形
+      const R = ((w * w) / 4 + h * h) / (2 * h);
+      const D = Math.ceil(2 * R) + 2;
+      const delta = Math.ceil(R - Math.sqrt(Math.max(0, R * R - (w * w) / 4))) + 1;
+      const originY = D - delta;
+
+      summary.style.setProperty('--circle-w', `${D}px`);
+      summary.style.setProperty('--circle-h', `${D}px`);
+      summary.style.setProperty('--circle-bottom', `-${delta}px`);
+      summary.style.setProperty('--circle-origin', `50% ${originY}px`);
+    });
+  };
+
+  const run = (retries = 5) => {
+    if (retryTimer) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+
+    if (onResize) {
+      window.removeEventListener('resize', onResize);
+      onResize = null;
+    }
+
+    const summaries = [];
+    document.querySelectorAll(DETAILS_TITLE_SELECTOR).forEach((summary) => {
+      if (summary.querySelector('.hover-circle')) return;
+
+      const text = summary.textContent ?? '';
+
+      const circle = document.createElement('span');
+      circle.className = 'hover-circle';
+      circle.setAttribute('aria-hidden', 'true');
+
+      const labelStack = document.createElement('span');
+      labelStack.className = 'label-stack';
+
+      const label = document.createElement('span');
+      label.className = 'pill-label';
+      label.textContent = text;
+
+      const labelHover = document.createElement('span');
+      labelHover.className = 'pill-label-hover';
+      labelHover.textContent = text;
+
+      labelStack.appendChild(label);
+      labelStack.appendChild(labelHover);
+
+      summary.textContent = '';
+      summary.appendChild(circle);
+      summary.appendChild(labelStack);
+
+      summaries.push(summary);
+    });
+
+    if (summaries.length === 0) {
+      if (retries > 0) {
+        retryTimer = setTimeout(() => run(retries - 1), 200);
+      }
+      return;
+    }
+
+    layout(summaries);
+
+    onResize = () => layout(summaries);
+    window.addEventListener('resize', onResize);
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => layout(summaries)).catch(() => {});
+    }
+  };
+
+  run();
+
+  return () => {
+    if (retryTimer) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+    if (onResize) {
+      window.removeEventListener('resize', onResize);
+      onResize = null;
+    }
+  };
+}
+
 export default defineClientConfig({
   enhance({ app }) {
     app.component('DifficultyBadge', DifficultyBadge);
@@ -85,6 +194,7 @@ export default defineClientConfig({
     const route = useRoute();
     const pageData = usePageData();
     const inject = createBadgeInjector(() => pageData);
+    let detailsHoverCleanup = () => {};
 
     // 在 <body> 上标记当前是否为首页, 供 CSS 精确控制 nav active 态:
     //   reco 的 Link.vue 用 route.path.startsWith(item.link) 判定 active, 而首页 link 是 '/',
@@ -100,6 +210,7 @@ export default defineClientConfig({
       syncHomeFlag();
       inject();
       mountGlassFilterDefs();
+      detailsHoverCleanup = enhanceDetailsHover();
     });
 
     watch(
@@ -108,6 +219,8 @@ export default defineClientConfig({
         syncHomeFlag();
         nextTick(() => {
           inject();
+          detailsHoverCleanup();
+          detailsHoverCleanup = enhanceDetailsHover();
         });
       },
       { flush: 'post' }

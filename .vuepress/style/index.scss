@@ -471,11 +471,19 @@ html.dark .theme-reco-default-content table {
   background-color: transparent;
 }
 
+// 胶囊标题：hover 时圆形蒙版从底部弧形扩张填充 + 文字滚动切换颜色
+// 动效参考 React Bits PillNav 的 Nav Hover
 .custom-container.details > summary.custom-container-title {
+  --pill-h: 36px;
+  --circle-bg: #0064fa;
+  --hover-text: #fff;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 36px;
+  position: relative;
+  overflow: hidden;
+  height: var(--pill-h);
   padding: 0 18px;
   font-size: 16px;
   font-weight: 600;
@@ -489,16 +497,6 @@ html.dark .theme-reco-default-content table {
   color: #0064fa;
   background-color: #eaf5ff;
   border-color: #cbe7fe;
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-
-  &:hover {
-    color: #0062d6;
-    background-color: #cbe7fe;
-    border-color: #98cdfd;
-  }
 
   &::-webkit-details-marker {
     display: none;
@@ -514,7 +512,83 @@ html.dark .theme-reco-default-content table {
     border-right: 2px solid currentColor;
     border-bottom: 2px solid currentColor;
     transform: rotate(-45deg);
+    transition: transform 0.2s ease, border-color 0.3s ease;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  &:hover::before {
+    border-color: var(--hover-text);
+  }
+
+  // 悬停时从底部扩张的圆形蒙版（尺寸由 JS 按胶囊实际宽高计算）
+  .hover-circle {
+    position: absolute;
+    left: 50%;
+    bottom: var(--circle-bottom, 0);
+    width: var(--circle-w, 0);
+    height: var(--circle-h, 0);
+    border-radius: 50%;
+    background: var(--circle-bg);
+    z-index: 0;
+    pointer-events: none;
+    will-change: transform;
+    transform: translateX(-50%) scale(0);
+    transform-origin: var(--circle-origin, center);
     transition: transform 0.2s ease;
+  }
+
+  &:hover .hover-circle {
+    transform: translateX(-50%) scale(1);
+    transition: transform 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  // 标签堆叠：两层文字，hover 时原文字上移退出、新文字从下方滚入
+  .label-stack {
+    position: relative;
+    display: inline-block;
+    line-height: 1;
+    z-index: 2;
+    overflow: hidden;
+
+    .pill-label {
+      position: relative;
+      z-index: 2;
+      display: inline-block;
+      line-height: 1;
+      white-space: nowrap;
+      will-change: transform;
+      transform: translateY(0);
+      transition: transform 0.2s ease;
+    }
+
+    .pill-label-hover {
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--hover-text);
+      z-index: 3;
+      display: inline-block;
+      line-height: 1;
+      white-space: nowrap;
+      will-change: transform, opacity;
+      transform: translateY(calc(var(--pill-h) + 12px));
+      opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+  }
+
+  &:hover .label-stack .pill-label {
+    transform: translateY(calc(-1 * var(--pill-h) - 8px));
+    transition: transform 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  &:hover .label-stack .pill-label-hover {
+    transform: translateY(0);
+    opacity: 1;
+    transition: transform 0.4s cubic-bezier(0.215, 0.61, 0.355, 1),
+      opacity 0.4s ease;
   }
 }
 
@@ -544,16 +618,13 @@ html.dark .theme-reco-default-content table {
   height: auto;
 }
 
+// 暗色模式
 .dark .custom-container.details > summary.custom-container-title {
+  --circle-bg: #3b9eff;
+  --hover-text: #fff;
   color: #6fa8ff;
   background-color: rgba(0, 100, 250, 0.16);
   border-color: rgba(0, 100, 250, 0.32);
-
-  &:hover {
-    color: #8fbcff;
-    background-color: rgba(0, 100, 250, 0.24);
-    border-color: rgba(0, 100, 250, 0.45);
-  }
 }
 
 // ===== 代码块配色 =====
