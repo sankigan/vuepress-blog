@@ -53,7 +53,11 @@ export default defineUserConfig({
     // docsDir: './docs',
     docsBranch: 'main',
     author: 'sankigan',
+    // 默认不显示「更新于」(若某页想开启, 在 frontmatter 写 lastUpdated: true 即可覆盖)
+    lastUpdated: false,
     lastUpdatedText: '更新于',
+    // 默认不显示「编辑此页面」(若某页想开启, 在 frontmatter 写 editLink: true 即可覆盖)
+    editLink: false,
     editLinkText: '编辑此页面',
     authorAvatar: '/avatar.jpg',
     repo: 'https://github.com/sankigan',
