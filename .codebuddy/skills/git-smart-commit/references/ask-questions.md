@@ -24,7 +24,7 @@
 
 ## Q2 — commit message 语言
 
-触发条件：每次生成 message 前。
+触发条件：**首次使用**（MEMORY.md 中无语言偏好记录）。
 
 ```json
 {
@@ -33,21 +33,18 @@
     "header": "Msg 语言",
     "options": [
       { "label": "中文", "description": "生成中文 commit message" },
-      { "label": "英文", "description": "生成英文 commit message" },
-      { "label": "跟上次一样", "description": "使用上次的语言偏好（上次：<中文/英文>）" }
+      { "label": "英文", "description": "生成英文 commit message" }
     ]
   }]
 }
 ```
-
-首次使用时（MEMORY.md 中无偏好记录）不显示"跟上次一样"选项。
 
 用户选择后，将偏好写入 `~/.workbuddy/MEMORY.md`：
 ```
 - git-smart-commit 语言偏好：中文
 ```
 
-下次 Q2 的第三项显示"跟上次一样（中文）"。
+**非首次使用时不弹此卡**，静默沿用上次偏好。除非用户在本轮指令中主动指定语言（如"用英文写 commit message"），才覆盖偏好。
 
 ## Q3 — 是否 push
 
@@ -100,9 +97,33 @@
 - 加 `--no-verify` 参数重新 commit
 - 本次会话内不再问，但**不持久化**此偏好到 MEMORY.md
 
+## Q5 — message 确认（强意图时触发）
+
+触发条件：步骤 5 判定为**强意图**（用户指令已包含明确提交动作）。
+
+把生成的 message（多组时含分组方案）贴出来后，用此卡一次性确认。多组时所有组的 message 合并展示在 question 里。
+
+```json
+{
+  "questions": [{
+    "question": "commit message 如下，确认提交吗？\n\n<组1> <type>(<scope>): <subject>\n  <body>\n\n<组2> ...",
+    "header": "确认 message",
+    "options": [
+      { "label": "确认提交", "description": "按上述 message 执行提交" },
+      { "label": "修改 message", "description": "手动调整 message 内容" }
+    ]
+  }]
+}
+```
+
+用户选"修改 message"时，让用户描述修改方式，调整后重新确认。
+
+> 单组改动 + 强意图时，此卡是唯一需要弹的卡（语言已静默沿用、分组无需确认）。
+> 多组改动 + 强意图时，此卡合并分组确认与 message 确认，一次完成。
+
 ## 提问纪律
 
-1. **只在关键决策点提问**：分组确认、语言选择、是否 push、hook 失败——这四个。其他环节直接执行或直接展示。
+1. **只在关键决策点提问**：语言选择（首次）、message 确认（强意图）、分组确认（弱意图多组）、是否 push、hook 失败——按场景触发，其他环节直接执行或直接展示。
 2. **条件触发**：单组改动跳过 Q1，hook 没失败不触发 Q4，没有 feature 分支不显示"推送并开 PR"。
-3. **不要弹"确认 message"卡**：生成 msg 后直接贴文本让用户看，用户说"可以"或修改即可，不用 AskUserQuestion。
+3. **message 确认分场景**：弱意图时贴文本让用户看，用户说"可以"或修改即可，不弹卡；强意图时贴文本 + 弹 Q5 确认卡，一次完成 review。无论哪种场景，**都不得跳过 review 直接提交**。
 4. **不要弹"是否继续"卡**：多组提交时不要每组之间问"继续吗"，按确认的方案一口气执行完，最后统一问 push。
